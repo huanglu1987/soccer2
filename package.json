@@ -1,0 +1,10 @@
+{
+  "name": "football-odds-predictor-web",
+  "version": "0.1.0",
+  "private": true,
+  "description": "手机浏览器可访问的足球赔率预测网页",
+  "scripts": {
+    "dev": "vercel dev",
+    "smoke": "node scripts/smoke-test.js"
+  }
+}

@@ -1,6 +1,6 @@
 # 足球赔率预测器
 
-这是一个可本地运行的 Codex 插件工程，用于根据固定 6 家博彩公司初始 `1X2` 赔率生成足球比赛结果预测。
+这是一个可本地运行的 Codex 插件工程，同时也已经整理成可部署到 Vercel 的手机网页版本，用于根据固定 6 家博彩公司初始 `1X2` 赔率生成足球比赛结果预测。
 
 ## 当前能力
 
@@ -15,12 +15,38 @@
 - [scripts/server.js](/Users/huanglu/Projects/WORD 编辑/plugins/football-odds-predictor/scripts/server.js)：MCP 服务入口
 - [calibration/latest.json](/Users/huanglu/Projects/WORD 编辑/plugins/football-odds-predictor/calibration/latest.json)：最新校准结果
 - [scripts/calibrate.js](/Users/huanglu/Projects/WORD 编辑/plugins/football-odds-predictor/scripts/calibrate.js)：历史回测与阈值校准脚本
+- [index.html](/Users/huanglu/Projects/WORD 编辑/plugins/football-odds-predictor/index.html)：手机浏览器版本入口页
+- [app.js](/Users/huanglu/Projects/WORD 编辑/plugins/football-odds-predictor/app.js)：网页版交互逻辑
+- [api/predict.js](/Users/huanglu/Projects/WORD 编辑/plugins/football-odds-predictor/api/predict.js)：Vercel Serverless 预测接口
+- [lib/predictor.js](/Users/huanglu/Projects/WORD 编辑/plugins/football-odds-predictor/lib/predictor.js)：默认规则模型公共模块
 
 ## 本地运行
 
 ```bash
 node scripts/smoke-test.js
 ```
+
+## 网页版本地调试
+
+```bash
+npm install -g vercel
+vercel dev
+```
+
+启动后可在浏览器打开本地地址，手机和桌面浏览器都可以直接访问。
+
+## 部署到 Vercel
+
+1. 把这个仓库导入 Vercel
+2. Framework Preset 选择 `Other`
+3. 不需要额外环境变量
+4. 部署完成后即可得到公网网址
+
+当前网页版使用：
+
+- 静态前端页面
+- `/api/predict` 轻量后端接口
+- 公开访问，不加登录
 
 ## 安装为本地插件
 

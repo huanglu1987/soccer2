@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>足球赔率预测器</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="page">
+      <section class="hero">
+        <div class="eyebrow">Soccer 1X2 Predictor</div>
+        <h1>足球赔率预测器</h1>
+        <p class="subtitle">
+          输入固定 6 家公司的初始赔率，生成主胜 / 平局 / 客胜概率、推荐结果、结构标签和解释。
+        </p>
+        <div class="hero-meta">
+          <span>固定公司：Bet365 / William Hill / Bwin / Interwetten / Pinnacle / BetVictor</span>
+          <span>模型：默认规则模型</span>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header">
+          <div>
+            <h2>录入赔率</h2>
+            <p>支持批量粘贴 1 到 6 行，也支持逐行整行粘贴。</p>
+          </div>
+        </div>
+        <div class="panel-body">
+          <label class="label" for="matchName">比赛名称（可选）</label>
+          <input id="matchName" placeholder="例如：阿森纳 vs 切尔西" />
+
+          <label class="label" for="bulkPaste">批量粘贴 6 行初始赔率</label>
+          <textarea
+            id="bulkPaste"
+            class="bulk-paste"
+            placeholder="每行一家公司，例如&#10;1.72 3.75 4.85&#10;1.74 3.70 4.75"
+          ></textarea>
+
+          <div id="rows" class="rows"></div>
+
+          <div class="actions">
+            <button id="predictButton" class="primary">生成预测</button>
+            <button id="sampleButton" class="secondary">填入示例</button>
+            <button id="resetButton" class="secondary">清空</button>
+          </div>
+
+          <p id="notice" class="notice"></p>
+        </div>
+      </section>
+
+      <section class="panel result-panel">
+        <div class="panel-header">
+          <div>
+            <h2>预测结果</h2>
+            <p>当前使用公开历史回测校准后的默认规则模型。</p>
+          </div>
+        </div>
+        <div id="resultRoot" class="panel-body">
+          <div class="result-hero">
+            <div class="result-kicker">等待计算</div>
+            <div class="result-title">尚未生成预测</div>
+            <div class="result-meta">输入 6 家公司的初始赔率后点击“生成预测”。</div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script src="/app.js" defer></script>
+  </body>
+  </html>
