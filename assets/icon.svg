@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-label="Football Odds Predictor">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0F766E"/>
+      <stop offset="100%" stop-color="#155E75"/>
+    </linearGradient>
+  </defs>
+  <rect width="256" height="256" rx="56" fill="url(#bg)"/>
+  <circle cx="128" cy="108" r="54" fill="#F8FAFC"/>
+  <path d="M128 66l23 17-9 27h-28l-9-27 23-17zm-45 32l23 6 9 28-18 18-24-14 10-38zm90 0l10 38-24 14-18-18 9-28 23-6zm-58 64h26l9 28-22 16-22-16 9-28zm-34-4l24 14-4 29-28 5-13-23 21-25zm94 0l21 25-13 23-28-5-4-29 24-14z" fill="#0F172A"/>
+  <path d="M54 193c17-22 43-33 74-33s57 11 74 33" fill="none" stroke="#FDE68A" stroke-width="16" stroke-linecap="round"/>
+  <path d="M76 82c18-19 35-28 52-28 23 0 43 10 60 30" fill="none" stroke="#FDE68A" stroke-width="12" stroke-linecap="round" opacity="0.9"/>
+</svg>

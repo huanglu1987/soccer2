@@ -1,0 +1,37 @@
+{
+  "name": "football-odds-predictor",
+  "version": "0.1.0",
+  "description": "根据固定 6 家博彩公司初始 1X2 赔率生成可解释的足球赛果预测。",
+  "author": {
+    "name": "huanglu"
+  },
+  "license": "UNLICENSED",
+  "keywords": [
+    "football",
+    "odds",
+    "prediction",
+    "1x2",
+    "bookmaker"
+  ],
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "足球赔率预测器",
+    "shortDescription": "输入 6 家公司的初始赔率，得到主平负预测与概率。",
+    "longDescription": "基于固定 6 家博彩公司初始 1X2 赔率，先做去水处理，再结合市场共识、公司分歧、平局压力和异常值过滤，输出可解释的单结果或严格受限的双结果预测。",
+    "developerName": "huanglu",
+    "category": "Productivity",
+    "capabilities": [
+      "Interactive",
+      "Read"
+    ],
+    "defaultPrompt": [
+      "打开足球赔率预测器",
+      "用初始赔率预测这场比赛结果",
+      "分析这 6 家公司的赔率关系"
+    ],
+    "brandColor": "#0F766E",
+    "composerIcon": "./assets/icon.svg",
+    "logo": "./assets/icon.svg",
+    "screenshots": []
+  }
+}

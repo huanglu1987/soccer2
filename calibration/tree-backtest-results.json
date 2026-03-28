@@ -1,0 +1,114 @@
+[
+  {
+    "model": "hist_gbdt_depth4",
+    "train_matches": 12392,
+    "validation_matches": 3064,
+    "threshold": 0.09,
+    "train": {
+      "top1Accuracy": 0.527,
+      "singleRate": 0.7808,
+      "singlePredictionAccuracy": 0.5649,
+      "exactSingleHitRate": 0.4411,
+      "inclusiveHitRate": 0.6093,
+      "weightedHitRate": 0.5622,
+      "doubleRate": 0.2192,
+      "drawSingleRate": 0.0001,
+      "drawSinglePrecision": 1.0
+    },
+    "validation": {
+      "top1Accuracy": 0.5108,
+      "singleRate": 0.779,
+      "singlePredictionAccuracy": 0.548,
+      "exactSingleHitRate": 0.4269,
+      "inclusiveHitRate": 0.5819,
+      "weightedHitRate": 0.5385,
+      "doubleRate": 0.221,
+      "drawSingleRate": 0.0,
+      "drawSinglePrecision": 0.0
+    }
+  },
+  {
+    "model": "hist_gbdt_depth6",
+    "train_matches": 12392,
+    "validation_matches": 3064,
+    "threshold": 0.114,
+    "train": {
+      "top1Accuracy": 0.5592,
+      "singleRate": 0.7033,
+      "singlePredictionAccuracy": 0.622,
+      "exactSingleHitRate": 0.4375,
+      "inclusiveHitRate": 0.6816,
+      "weightedHitRate": 0.6132,
+      "doubleRate": 0.2967,
+      "drawSingleRate": 0.001,
+      "drawSinglePrecision": 1.0
+    },
+    "validation": {
+      "top1Accuracy": 0.5091,
+      "singleRate": 0.7105,
+      "singlePredictionAccuracy": 0.5531,
+      "exactSingleHitRate": 0.393,
+      "inclusiveHitRate": 0.6002,
+      "weightedHitRate": 0.5422,
+      "doubleRate": 0.2895,
+      "drawSingleRate": 0.0,
+      "drawSinglePrecision": 0.0
+    }
+  },
+  {
+    "model": "extra_trees",
+    "train_matches": 12392,
+    "validation_matches": 3064,
+    "threshold": 0.2,
+    "train": {
+      "top1Accuracy": 0.9889,
+      "singleRate": 0.9192,
+      "singlePredictionAccuracy": 0.9989,
+      "exactSingleHitRate": 0.9182,
+      "inclusiveHitRate": 0.999,
+      "weightedHitRate": 0.9763,
+      "doubleRate": 0.0808,
+      "drawSingleRate": 0.2203,
+      "drawSinglePrecision": 1.0
+    },
+    "validation": {
+      "top1Accuracy": 0.5016,
+      "singleRate": 0.482,
+      "singlePredictionAccuracy": 0.5972,
+      "exactSingleHitRate": 0.2879,
+      "inclusiveHitRate": 0.6537,
+      "weightedHitRate": 0.5513,
+      "doubleRate": 0.518,
+      "drawSingleRate": 0.0003,
+      "drawSinglePrecision": 0.0
+    }
+  },
+  {
+    "model": "random_forest",
+    "train_matches": 12392,
+    "validation_matches": 3064,
+    "threshold": 0.2,
+    "train": {
+      "top1Accuracy": 0.9877,
+      "singleRate": 0.9128,
+      "singlePredictionAccuracy": 0.9986,
+      "exactSingleHitRate": 0.9116,
+      "inclusiveHitRate": 0.9987,
+      "weightedHitRate": 0.9743,
+      "doubleRate": 0.0872,
+      "drawSingleRate": 0.2164,
+      "drawSinglePrecision": 1.0
+    },
+    "validation": {
+      "top1Accuracy": 0.5003,
+      "singleRate": 0.4514,
+      "singlePredictionAccuracy": 0.6052,
+      "exactSingleHitRate": 0.2732,
+      "inclusiveHitRate": 0.6671,
+      "weightedHitRate": 0.5568,
+      "doubleRate": 0.5486,
+      "drawSingleRate": 0.0007,
+      "drawSinglePrecision": 0.0
+    }
+  }
+]

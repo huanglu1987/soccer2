@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "football-odds-predictor": {
+      "command": "node",
+      "args": [
+        "/Users/huanglu/Projects/WORD 编辑/plugins/football-odds-predictor/scripts/server.js"
+      ]
+    }
+  }
+}

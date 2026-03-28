@@ -1,0 +1,2068 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>足球赔率预测器</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f6f4eb;
+        --surface: rgba(255, 255, 255, 0.92);
+        --surface-strong: #fffdf8;
+        --text: #16221f;
+        --muted: #546560;
+        --line: rgba(22, 34, 31, 0.12);
+        --brand: #0f766e;
+        --brand-2: #155e75;
+        --accent: #f59e0b;
+        --danger: #b91c1c;
+        --shadow: 0 22px 60px rgba(15, 23, 42, 0.12);
+        font-family: "Noto Sans SC", "PingFang SC", "Helvetica Neue", sans-serif;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        color: var(--text);
+        background:
+          radial-gradient(circle at top left, rgba(245, 158, 11, 0.18), transparent 32%),
+          radial-gradient(circle at top right, rgba(15, 118, 110, 0.16), transparent 34%),
+          linear-gradient(180deg, #fbfaf5 0%, var(--bg) 100%);
+      }
+
+      .shell {
+        max-width: 1180px;
+        margin: 0 auto;
+        padding: 22px 18px 30px;
+      }
+
+      .hero {
+        padding: 24px;
+        border: 1px solid var(--line);
+        border-radius: 28px;
+        background: linear-gradient(140deg, rgba(255, 255, 255, 0.96), rgba(247, 252, 251, 0.94));
+        box-shadow: var(--shadow);
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        padding: 6px 10px;
+        border-radius: 999px;
+        background: rgba(15, 118, 110, 0.1);
+        color: var(--brand);
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      h1 {
+        margin: 14px 0 10px;
+        font-size: clamp(28px, 4vw, 44px);
+        line-height: 1.05;
+      }
+
+      .subtitle {
+        margin: 0;
+        max-width: 760px;
+        color: var(--muted);
+        line-height: 1.65;
+      }
+
+      .chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 18px;
+      }
+
+      .chip {
+        padding: 8px 12px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.78);
+        font-size: 13px;
+      }
+
+      .layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1.25fr) minmax(320px, 0.95fr);
+        gap: 18px;
+        margin-top: 18px;
+      }
+
+      .panel {
+        border: 1px solid var(--line);
+        border-radius: 24px;
+        background: var(--surface);
+        box-shadow: var(--shadow);
+      }
+
+      .panel-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        padding: 18px 20px 14px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .panel-header h2 {
+        margin: 0;
+        font-size: 20px;
+      }
+
+      .panel-header p {
+        margin: 6px 0 0;
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      .panel-body {
+        padding: 18px 20px 22px;
+      }
+
+      .match-box {
+        margin-bottom: 16px;
+      }
+
+      .label {
+        display: block;
+        margin-bottom: 8px;
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--muted);
+      }
+
+      input,
+      textarea {
+        width: 100%;
+        border: 1px solid rgba(22, 34, 31, 0.18);
+        border-radius: 14px;
+        padding: 12px 14px;
+        font: inherit;
+        background: #fff;
+        color: var(--text);
+      }
+
+      input:focus,
+      textarea:focus {
+        outline: 2px solid rgba(15, 118, 110, 0.2);
+        border-color: var(--brand);
+      }
+
+      .odds-table {
+        display: grid;
+        gap: 10px;
+      }
+
+      .bulk-paste-box {
+        margin-bottom: 12px;
+      }
+
+      .bulk-paste-input {
+        min-height: 108px;
+        resize: vertical;
+      }
+
+      .input-section + .input-section {
+        margin-top: 18px;
+      }
+
+      .subsection-title {
+        margin: 0 0 6px;
+        font-size: 15px;
+        font-weight: 700;
+      }
+
+      .subsection-copy {
+        margin: 0 0 12px;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.55;
+      }
+
+      .table-head,
+      .bookmaker-row {
+        display: grid;
+        grid-template-columns: minmax(118px, 1.05fr) minmax(180px, 1.45fr) repeat(3, minmax(0, 1fr));
+        gap: 10px;
+        align-items: center;
+      }
+
+      .table-head {
+        padding: 0 2px;
+        color: var(--muted);
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      .bookmaker-row {
+        padding: 14px;
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.72);
+      }
+
+      .bookmaker-name {
+        font-weight: 700;
+      }
+
+      .paste-hint {
+        margin-top: 10px;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.55;
+      }
+
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 18px;
+      }
+
+      button {
+        border: 0;
+        border-radius: 999px;
+        padding: 11px 16px;
+        font: inherit;
+        font-weight: 700;
+        cursor: pointer;
+        transition: transform 120ms ease, opacity 120ms ease;
+      }
+
+      button:hover {
+        transform: translateY(-1px);
+      }
+
+      button.primary {
+        color: white;
+        background: linear-gradient(135deg, var(--brand), var(--brand-2));
+      }
+
+      button.secondary {
+        color: var(--text);
+        background: rgba(15, 118, 110, 0.08);
+      }
+
+      .engine-switch {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 14px;
+      }
+
+      .switch-button {
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        padding: 9px 14px;
+        background: rgba(255, 255, 255, 0.72);
+        color: var(--text);
+      }
+
+      .switch-button.active {
+        color: white;
+        border-color: rgba(15, 118, 110, 0.4);
+        background: linear-gradient(135deg, var(--brand), var(--brand-2));
+        box-shadow: 0 10px 24px rgba(15, 118, 110, 0.2);
+      }
+
+      .switch-button:disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      .notice {
+        margin-top: 14px;
+        min-height: 22px;
+        font-size: 14px;
+        color: var(--danger);
+      }
+
+      .mode-indicator {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-top: 14px;
+        padding: 12px 14px;
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.78);
+      }
+
+      .mode-label {
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--muted);
+      }
+
+      .mode-value {
+        display: inline-flex;
+        align-items: center;
+        padding: 6px 10px;
+        border-radius: 999px;
+        font-size: 13px;
+        font-weight: 700;
+        color: white;
+        background: linear-gradient(135deg, var(--brand), var(--brand-2));
+      }
+
+      .result-hero {
+        padding: 18px;
+        border-radius: 22px;
+        background: linear-gradient(145deg, rgba(15, 118, 110, 0.12), rgba(245, 158, 11, 0.12));
+      }
+
+      .result-kicker {
+        color: var(--muted);
+        font-size: 13px;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+
+      .result-title {
+        margin: 10px 0 4px;
+        font-size: clamp(26px, 3vw, 38px);
+        line-height: 1.05;
+      }
+
+      .result-meta {
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      .bars {
+        display: grid;
+        gap: 12px;
+        margin-top: 16px;
+      }
+
+      .bar-row {
+        display: grid;
+        gap: 8px;
+      }
+
+      .bar-label {
+        display: flex;
+        justify-content: space-between;
+        font-weight: 700;
+        font-size: 14px;
+      }
+
+      .bar-track {
+        overflow: hidden;
+        height: 12px;
+        border-radius: 999px;
+        background: rgba(22, 34, 31, 0.08);
+      }
+
+      .bar-fill {
+        height: 100%;
+        border-radius: 999px;
+        background: linear-gradient(90deg, var(--brand), var(--accent));
+      }
+
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+        margin-top: 18px;
+      }
+
+      .stat-card {
+        padding: 14px;
+        border-radius: 18px;
+        border: 1px solid var(--line);
+        background: var(--surface-strong);
+      }
+
+      .stat-card strong {
+        display: block;
+        font-size: 24px;
+        margin-top: 4px;
+      }
+
+      .explanation {
+        margin-top: 16px;
+        padding: 14px;
+        border-radius: 18px;
+        background: rgba(15, 118, 110, 0.06);
+        color: var(--text);
+        line-height: 1.6;
+      }
+
+      .method {
+        margin-top: 16px;
+        padding: 14px;
+        border-top: 1px solid var(--line);
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.6;
+      }
+
+      @media (max-width: 920px) {
+        .layout {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media (max-width: 640px) {
+        .table-head {
+          display: none;
+        }
+
+        .bookmaker-row {
+          grid-template-columns: 1fr;
+        }
+
+        .stats {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <section class="hero">
+        <span class="eyebrow">Football Odds Predictor</span>
+        <h1>固定 6 家初始赔率，本地生成可解释赛果预测</h1>
+        <p class="subtitle">
+          默认输入 Bet365、William Hill、Bwin、Interwetten、Pinnacle、BetVictor 的主胜、平局、客胜初始赔率。
+          当前版本只基于 6 家公司的初始赔率做预测，不再要求录入临场赔率。
+        </p>
+        <div class="chips" id="chips"></div>
+      </section>
+
+      <div class="layout">
+        <section class="panel">
+          <div class="panel-header">
+            <div>
+              <h2>赔率录入</h2>
+              <p>当前版本只需要填写初始赔率。十进制赔率必须大于 1.01。</p>
+            </div>
+          </div>
+          <div class="panel-body">
+            <div class="match-box">
+              <label class="label" for="matchName">比赛名称，可选</label>
+              <input id="matchName" type="text" placeholder="例如：曼联 vs 利物浦" />
+            </div>
+
+            <div class="input-section">
+              <h3 class="subsection-title">初始赔率，默认必填</h3>
+              <p class="subsection-copy">页面会基于这 6 家公司的初始赔率直接生成预测。</p>
+              <div class="bulk-paste-box">
+                <label class="label" for="openingBulkPaste">一次性粘贴 1 到 6 行初始赔率</label>
+                <textarea
+                  class="bulk-paste-input"
+                  id="openingBulkPaste"
+                  data-bulk-group="opening"
+                  placeholder="每行一家公司，例如：&#10;1.72 3.75 4.85&#10;1.74 3.70 4.75&#10;..."
+                ></textarea>
+              </div>
+              <div class="odds-table" id="openingOddsTable"></div>
+            </div>
+
+            <div class="input-section" hidden>
+              <h3 class="subsection-title">临场赔率，增强版可选</h3>
+              <p class="subsection-copy">当前版本不再使用这部分数据。</p>
+              <div class="bulk-paste-box">
+                <label class="label" for="closingBulkPaste">一次性粘贴 1 到 6 行临场赔率</label>
+                <textarea
+                  class="bulk-paste-input"
+                  id="closingBulkPaste"
+                  data-bulk-group="closing"
+                  placeholder="每行一家公司，例如：&#10;1.68 3.82 5.12&#10;1.70 3.76 5.00&#10;..."
+                ></textarea>
+              </div>
+              <div class="odds-table" id="closingOddsTable"></div>
+            </div>
+            <div class="paste-hint">
+              现在既支持单行粘贴，也支持整块粘贴 1 到 6 行赔率；每行都会按公司顺序自动拆成主胜、平局、客胜。
+            </div>
+
+            <div class="actions">
+              <button class="primary" id="predictButton" type="button">生成预测</button>
+              <button class="secondary" id="sampleButton" type="button">填入示例赔率</button>
+              <button class="secondary" id="resetButton" type="button">清空输入</button>
+            </div>
+
+            <div class="engine-switch">
+              <button class="switch-button active" id="ruleEngineButton" type="button">默认规则模型</button>
+              <button class="switch-button" id="supervisedEngineButton" type="button" hidden>监督学习增强版</button>
+              <button class="switch-button" id="highConfidenceEngineButton" type="button" hidden>高置信模式</button>
+            </div>
+
+            <div class="mode-indicator">
+              <span class="mode-label">当前模式</span>
+              <span class="mode-value" id="currentModeValue">默认规则模型</span>
+            </div>
+
+            <div class="notice" id="notice"></div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-header">
+            <div>
+              <h2>预测输出</h2>
+              <p>当前版本只使用初始赔率和默认规则模型。</p>
+            </div>
+          </div>
+          <div class="panel-body" id="resultRoot">
+            <div class="result-hero">
+              <div class="result-kicker">等待计算</div>
+              <div class="result-title">尚未生成预测</div>
+              <div class="result-meta">输入 6 家公司的初始赔率后点击“生成预测”。</div>
+            </div>
+            <div class="method">
+              规则摘要：先做去水，再按偏离度轻度降权，最后结合共识与分歧判断是否允许双结果。
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <script type="module">
+      const DEFAULT_CONFIG = {
+        companies: ["Bet365", "William Hill", "Bwin", "Interwetten", "Pinnacle", "BetVictor"],
+        thresholds: {
+          drawMinimum: 0.283,
+          drawLeadSlack: 0.014,
+          drawSplitLeadSlack: 0.024,
+          drawHomeAwayGapMax: 0.048,
+          drawDispersionMax: 0.03,
+          strongSingleProbabilityMin: 0.459,
+          strongSingleGapMin: 0.099,
+          strongSingleVoteShareMin: 1,
+          strongSingleDrawMax: 0.298,
+          favoriteVoteShareMin: 0.67,
+          sideDrawDoubleMin: 0.281,
+          sideDrawDoubleGapMax: 0.055,
+          splitVoteShareMax: 0.67,
+          homeAwayDoubleGapMax: 0.05,
+          dispersionMin: 0.018
+        },
+        doublePolicyLabel: "严格模式",
+        calibration: {
+          version: "2026-03-28",
+          label: "公开历史回测校准",
+          sampleSize: {
+            train: 12451,
+            validation: 3099,
+            total: 15550
+          },
+          sourceSummary: "football-data.co.uk 2021-22 至 2023-24，17 个联赛",
+          accuracySummary: {
+            singlePredictionAccuracy: 0.5251,
+            inclusiveHitRate: 0.585,
+            doubleRate: 0.2995
+          },
+          note:
+            "固定 6 家公司改为 Bet365、Bwin、William Hill、Interwetten、Pinnacle、BetVictor，并基于 15550 场公开历史初赔和独立赛季验证做了回测校准。"
+        },
+        supervisedModel: null,
+        supervisedSummary: {
+          version: "2026-03-28",
+          label: "监督学习实验模型",
+          accuracySummary: {
+            top1Accuracy: 0.5069,
+            singlePredictionAccuracy: 0.5381,
+            inclusiveHitRate: 0.5878,
+            doubleRate: 0.2588
+          },
+          note:
+            "监督学习增强版会把 6 家公司的临场赔率变化也纳入判断，启用时需要额外填写临场赔率。"
+        },
+        highConfidenceSummary: {
+          enabled: true,
+          policy: {
+            topProbabilityMin: 0.6,
+            topGapMin: 0.08,
+            consensusMin: 0.7,
+            favoriteVoteShareMin: 1
+          },
+          metrics: {
+            acceptedRate: 0.3525,
+            acceptedAccuracy: 0.6398,
+            acceptedCount: 1080,
+            matches: 3064
+          },
+          note:
+            "高置信模式只保留最有把握的单结果场次，验证集接受准确率约 64.0%，但只覆盖约 35.3% 的比赛。"
+        }
+      };
+
+      const SAMPLE_OPENING_ODDS = [
+        [1.72, 3.75, 4.85],
+        [1.74, 3.7, 4.75],
+        [1.73, 3.68, 4.9],
+        [1.75, 3.72, 4.8],
+        [1.7, 3.8, 4.95],
+        [1.76, 3.69, 4.7]
+      ];
+
+      const SAMPLE_CLOSING_ODDS = [
+        [1.68, 3.82, 5.12],
+        [1.7, 3.76, 5.0],
+        [1.69, 3.74, 5.08],
+        [1.71, 3.78, 4.96],
+        [1.66, 3.88, 5.2],
+        [1.72, 3.73, 4.92]
+      ];
+
+      const outcomeLabels = {
+        home: "主胜",
+        draw: "平局",
+        away: "客胜"
+      };
+
+      const outcomeToClass = {
+        home: "H",
+        draw: "D",
+        away: "A"
+      };
+
+      const classToOutcome = {
+        H: "home",
+        D: "draw",
+        A: "away"
+      };
+
+      const chipsEl = document.querySelector("#chips");
+      const openingBulkPasteEl = document.querySelector("#openingBulkPaste");
+      const closingBulkPasteEl = document.querySelector("#closingBulkPaste");
+      const openingOddsTableEl = document.querySelector("#openingOddsTable");
+      const closingOddsTableEl = document.querySelector("#closingOddsTable");
+      const predictButtonEl = document.querySelector("#predictButton");
+      const sampleButtonEl = document.querySelector("#sampleButton");
+      const resetButtonEl = document.querySelector("#resetButton");
+      const ruleEngineButtonEl = document.querySelector("#ruleEngineButton");
+      const supervisedEngineButtonEl = document.querySelector("#supervisedEngineButton");
+      const highConfidenceEngineButtonEl = document.querySelector("#highConfidenceEngineButton");
+      const currentModeValueEl = document.querySelector("#currentModeValue");
+      const noticeEl = document.querySelector("#notice");
+      const resultRootEl = document.querySelector("#resultRoot");
+      const matchNameEl = document.querySelector("#matchName");
+
+      let config = { ...DEFAULT_CONFIG };
+      let activeEngine = "rule";
+      let rpcId = 0;
+      const pendingRequests = new Map();
+      let toolOutput = window.openai?.toolOutput ?? null;
+      let lastPredictionState = null;
+
+      function clamp(value, min, max) {
+        return Math.max(min, Math.min(max, value));
+      }
+
+      function formatPercent(value) {
+        return (value * 100).toFixed(1) + "%";
+      }
+
+      function formatScore(value) {
+        return Math.round(value * 100) + "分";
+      }
+
+      function average(values) {
+        return values.reduce((sum, value) => sum + value, 0) / values.length;
+      }
+
+      function standardDeviation(values) {
+        const mean = average(values);
+        const variance = average(values.map((value) => (value - mean) ** 2));
+        return Math.sqrt(variance);
+      }
+
+      function normalizeProbabilities(values) {
+        const total = values.home + values.draw + values.away;
+        return {
+          home: values.home / total,
+          draw: values.draw / total,
+          away: values.away / total
+        };
+      }
+
+      function parseOdds(value) {
+        if (value.trim() === "") {
+          return NaN;
+        }
+        return Number(value);
+      }
+
+      function extractOddsTriplet(value) {
+        const matches = value.match(/\d+(?:\.\d+)?/g);
+        if (!matches || matches.length < 3) {
+          return null;
+        }
+
+        const numbers = matches.map((item) => Number(item)).filter(Number.isFinite);
+        if (numbers.length < 3) {
+          return null;
+        }
+
+        const triplet = numbers.slice(-3);
+        return {
+          home: triplet[0],
+          draw: triplet[1],
+          away: triplet[2]
+        };
+      }
+
+      function getBulkPasteEl(group) {
+        return group === "opening" ? openingBulkPasteEl : closingBulkPasteEl;
+      }
+
+      function toProbabilityRow(homeOdds, drawOdds, awayOdds) {
+        const rawHome = 1 / homeOdds;
+        const rawDraw = 1 / drawOdds;
+        const rawAway = 1 / awayOdds;
+        return normalizeProbabilities({
+          home: rawHome,
+          draw: rawDraw,
+          away: rawAway
+        });
+      }
+
+      function distance(a, b) {
+        return Math.sqrt(
+          (a.home - b.home) ** 2 +
+            (a.draw - b.draw) ** 2 +
+            (a.away - b.away) ** 2
+        );
+      }
+
+      function confidenceLabel(consensus, topGap) {
+        if (consensus >= 0.79 && topGap >= 0.175) {
+          return "高";
+        }
+        if (consensus >= 0.74 && topGap >= 0.015) {
+          return "中";
+        }
+        return "谨慎";
+      }
+
+      function buildRuleConfidenceProfile(baseConfidence, ranked, finalProb, topGap) {
+        const leaderKey = ranked[0].key;
+        const secondKey = ranked[1].key;
+        const drawProb = finalProb.draw;
+
+        if (baseConfidence === "高") {
+          if (secondKey === "draw") {
+            if (leaderKey === "home" && drawProb < 0.24 && topGap >= 0.25) {
+              return {
+                label: "高-强主",
+                note: "主胜排第一、平局排第二，而且平局概率较低、前二差值已经明显拉开，这类是高档里最强的主胜结构。"
+              };
+            }
+            if (leaderKey === "away" && drawProb < 0.24 && topGap >= 0.25) {
+              return {
+                label: "高-强客",
+                note: "客胜排第一、平局排第二，而且平局概率较低、前二差值已经明显拉开，这类是高档里最强的客胜结构。"
+              };
+            }
+            if (leaderKey === "home" && drawProb < 0.27 && topGap >= 0.2) {
+              return {
+                label: "高-强主",
+                note: "主胜排第一、平局排第二，且主和平之间已经有足够差距，当前更接近高档强主结构。"
+              };
+            }
+            if (leaderKey === "away" && drawProb < 0.27 && topGap >= 0.2) {
+              return {
+                label: "高-强客",
+                note: "客胜排第一、平局排第二，且客和平之间已经有足够差距，当前更接近高档强客结构。"
+              };
+            }
+          }
+
+          return {
+            label: "高-高档防平",
+            note: "当前虽然达到高档阈值，但结构里平局仍有一定存在感，或主客排序不够纯，建议按高档场次同时保留防平意识。"
+          };
+        }
+
+        if (baseConfidence === "中") {
+          if (secondKey === "draw") {
+            if (topGap < 0.1 || drawProb >= 0.3) {
+              return {
+                label: "中-偏平",
+                note: "平局排第二且和第一名接近，或平局概率已明显抬高，优先按平局候选理解。"
+              };
+            }
+            return {
+              label: leaderKey === "home" ? "中-偏主" : "中-偏客",
+              note: "平局虽然排第二，但第一名仍保持领先，当前更适合按单边方向加防平来理解。"
+            };
+          }
+
+          if (leaderKey === "home") {
+            if (topGap >= 0.1) {
+              return {
+                label: "中-偏主",
+                note: "主胜排第一且前二差值已有一定拉开，当前更偏向主队。"
+              };
+            }
+            if (drawProb >= 0.28) {
+              return {
+                label: "中-偏平",
+                note: "虽然主胜排第一，但差值不大且平局概率不低，建议把平局作为更强候选。"
+              };
+            }
+            return {
+              label: "中-偏主",
+              note: "主胜排第一，但主客仍有拉扯，当前只是偏主而不是强主。"
+            };
+          }
+
+          if (topGap >= 0.1) {
+            return {
+              label: "中-偏客",
+              note: "客胜排第一且前二差值已有一定拉开，当前更偏向客队。"
+            };
+          }
+          if (drawProb >= 0.27) {
+            return {
+              label: "中-偏平",
+              note: "虽然客胜排第一，但差值不大且平局概率偏高，当前更适合优先防平。"
+            };
+          }
+          return {
+            label: "中-偏客",
+            note: "客胜排第一，但领先优势不算大，当前只是偏客而不是强客。"
+          };
+        }
+
+        if (topGap < 0.05 && secondKey !== "draw") {
+          return {
+            label: "谨慎-主客胶着",
+            note: "第一和第二概率几乎贴在一起，而且是主客直接对冲，这类更像主客胶着盘。"
+          };
+        }
+
+        return {
+          label: "谨慎-不建议单押",
+          note: "当前结构缺乏足够清晰的单边信号，更适合放弃单押或改看双结果。"
+        };
+      }
+
+      function getFavoriteKey(row) {
+        return [
+          { key: "home", odds: row.home },
+          { key: "draw", odds: row.draw },
+          { key: "away", odds: row.away }
+        ].sort((left, right) => left.odds - right.odds)[0].key;
+      }
+
+      function buildMarketSummary(rows) {
+        const probabilityRows = rows.map((row) =>
+          toProbabilityRow(row.home, row.draw, row.away)
+        );
+        const votes = { home: 0, draw: 0, away: 0 };
+
+        rows.forEach((row) => {
+          votes[getFavoriteKey(row)] += 1;
+        });
+
+        const meanProb = {
+          home: average(probabilityRows.map((row) => row.home)),
+          draw: average(probabilityRows.map((row) => row.draw)),
+          away: average(probabilityRows.map((row) => row.away))
+        };
+
+        const stdProb = {
+          home: standardDeviation(probabilityRows.map((row) => row.home)),
+          draw: standardDeviation(probabilityRows.map((row) => row.draw)),
+          away: standardDeviation(probabilityRows.map((row) => row.away))
+        };
+
+        const rangeProb = {
+          home: Math.max(...probabilityRows.map((row) => row.home)) - Math.min(...probabilityRows.map((row) => row.home)),
+          draw: Math.max(...probabilityRows.map((row) => row.draw)) - Math.min(...probabilityRows.map((row) => row.draw)),
+          away: Math.max(...probabilityRows.map((row) => row.away)) - Math.min(...probabilityRows.map((row) => row.away))
+        };
+
+        const distances = probabilityRows.map((row) => distance(row, meanProb));
+        const meanDistance = average(distances);
+        const stdDistance = standardDeviation(distances);
+        const outlierCutoff = Math.max(0.045, meanDistance + stdDistance);
+        const outlierCount = distances.filter((value) => value > outlierCutoff).length;
+        const outlierShare = outlierCount / rows.length;
+        const consensus = clamp(1 - meanDistance / 0.09, 0, 1);
+        const dispersion = average([stdProb.home, stdProb.draw, stdProb.away]);
+
+        const ranked = [
+          { key: "home", value: meanProb.home },
+          { key: "draw", value: meanProb.draw },
+          { key: "away", value: meanProb.away }
+        ].sort((left, right) => right.value - left.value);
+
+        const topProb = ranked[0].value;
+        const secondProb = ranked[1].value;
+        const topGap = topProb - secondProb;
+        const homeAwayGap = Math.abs(meanProb.home - meanProb.away);
+        const skewSigned = meanProb.home - meanProb.away;
+        const drawVsSide = meanProb.draw - Math.max(meanProb.home, meanProb.away);
+        const overroundMean = average(
+          rows.map((row) => 1 / row.home + 1 / row.draw + 1 / row.away)
+        );
+
+        return {
+          probabilityRows,
+          meanProb,
+          stdProb,
+          rangeProb,
+          consensus,
+          outlierShare,
+          dispersion,
+          outlierCount,
+          homeAwayGap,
+          drawVsSide,
+          homeVoteShare: votes.home / rows.length,
+          drawVoteShare: votes.draw / rows.length,
+          awayVoteShare: votes.away / rows.length,
+          favoriteVoteShare: Math.max(votes.home, votes.draw, votes.away) / rows.length,
+          topGap,
+          topProb,
+          secondProb,
+          skewSigned,
+          overroundMean
+        };
+      }
+
+      function modelNeedsClosingOdds() {
+        return Boolean(
+          config.supervisedModel?.featureNames?.some((name) => name.includes(":close_home_prob"))
+        );
+      }
+
+      function buildOpeningOnlySupervisedFeatureVector(rows) {
+        const summary = buildMarketSummary(rows);
+        const vector = [
+          ...summary.probabilityRows.flatMap((row) => [row.home, row.draw, row.away]),
+          summary.meanProb.home,
+          summary.meanProb.draw,
+          summary.meanProb.away,
+          summary.stdProb.home,
+          summary.stdProb.draw,
+          summary.stdProb.away,
+          summary.rangeProb.home,
+          summary.rangeProb.draw,
+          summary.rangeProb.away,
+          summary.homeVoteShare,
+          summary.drawVoteShare,
+          summary.awayVoteShare,
+          summary.topProb,
+          summary.secondProb,
+          summary.topGap,
+          summary.homeAwayGap,
+          summary.skewSigned,
+          summary.drawVsSide,
+          summary.consensus,
+          summary.outlierShare,
+          summary.dispersion,
+          summary.overroundMean,
+          summary.meanProb.home * summary.meanProb.draw,
+          summary.meanProb.home * summary.meanProb.away,
+          summary.meanProb.draw * summary.meanProb.away,
+          summary.topGap * summary.topGap,
+          summary.skewSigned * summary.skewSigned,
+          summary.drawVsSide * summary.drawVsSide
+        ];
+
+        return {
+          vector,
+          metrics: {
+            consensus: summary.consensus,
+            dispersion: summary.dispersion,
+            outlierCount: summary.outlierCount,
+            homeAwayGap: summary.homeAwayGap,
+            drawPressure: summary.drawVsSide,
+            homeVoteShare: summary.homeVoteShare,
+            drawVoteShare: summary.drawVoteShare,
+            awayVoteShare: summary.awayVoteShare,
+            favoriteVoteShare: summary.favoriteVoteShare,
+            topGap: summary.topGap,
+            usedClosingOdds: false
+          }
+        };
+      }
+
+      function buildClosingEnhancedSupervisedFeatureVector(openingRows, closingRows) {
+        if (!closingRows) {
+          throw new Error("监督学习增强版需要补充 6 家公司的临场赔率。");
+        }
+
+        const opening = buildMarketSummary(openingRows);
+        const closing = buildMarketSummary(closingRows);
+        const favoriteFlipShare =
+          openingRows.filter(
+            (row, index) => getFavoriteKey(row) !== getFavoriteKey(closingRows[index])
+          ).length / openingRows.length;
+        const deltaMean = {
+          home: closing.meanProb.home - opening.meanProb.home,
+          draw: closing.meanProb.draw - opening.meanProb.draw,
+          away: closing.meanProb.away - opening.meanProb.away
+        };
+        const deltaAbsMean = {
+          home: average(
+            opening.probabilityRows.map((row, index) =>
+              Math.abs(closing.probabilityRows[index].home - row.home)
+            )
+          ),
+          draw: average(
+            opening.probabilityRows.map((row, index) =>
+              Math.abs(closing.probabilityRows[index].draw - row.draw)
+            )
+          ),
+          away: average(
+            opening.probabilityRows.map((row, index) =>
+              Math.abs(closing.probabilityRows[index].away - row.away)
+            )
+          )
+        };
+
+        const vector = [
+          ...opening.probabilityRows.flatMap((row) => [row.home, row.draw, row.away]),
+          opening.meanProb.home,
+          opening.meanProb.draw,
+          opening.meanProb.away,
+          opening.stdProb.home,
+          opening.stdProb.draw,
+          opening.stdProb.away,
+          opening.rangeProb.home,
+          opening.rangeProb.draw,
+          opening.rangeProb.away,
+          opening.homeVoteShare,
+          opening.drawVoteShare,
+          opening.awayVoteShare,
+          opening.topProb,
+          opening.secondProb,
+          opening.topGap,
+          opening.homeAwayGap,
+          opening.skewSigned,
+          opening.drawVsSide,
+          opening.consensus,
+          opening.outlierShare,
+          opening.dispersion,
+          opening.overroundMean,
+          ...closing.probabilityRows.flatMap((row) => [row.home, row.draw, row.away]),
+          closing.meanProb.home,
+          closing.meanProb.draw,
+          closing.meanProb.away,
+          closing.stdProb.home,
+          closing.stdProb.draw,
+          closing.stdProb.away,
+          closing.rangeProb.home,
+          closing.rangeProb.draw,
+          closing.rangeProb.away,
+          closing.homeVoteShare,
+          closing.drawVoteShare,
+          closing.awayVoteShare,
+          closing.topProb,
+          closing.secondProb,
+          closing.topGap,
+          closing.homeAwayGap,
+          closing.skewSigned,
+          closing.drawVsSide,
+          closing.consensus,
+          closing.outlierShare,
+          closing.dispersion,
+          closing.overroundMean,
+          deltaMean.home,
+          deltaMean.draw,
+          deltaMean.away,
+          deltaAbsMean.home,
+          deltaAbsMean.draw,
+          deltaAbsMean.away,
+          favoriteFlipShare,
+          closing.topGap - opening.topGap,
+          closing.skewSigned - opening.skewSigned,
+          closing.drawVsSide - opening.drawVsSide,
+          closing.consensus - opening.consensus,
+          closing.overroundMean - opening.overroundMean,
+          opening.meanProb.home * opening.meanProb.draw,
+          opening.meanProb.home * opening.meanProb.away,
+          opening.meanProb.draw * opening.meanProb.away,
+          opening.topGap * opening.topGap,
+          opening.skewSigned * opening.skewSigned,
+          opening.drawVsSide * opening.drawVsSide
+        ];
+
+        return {
+          vector,
+          metrics: {
+            consensus: closing.consensus,
+            dispersion: closing.dispersion,
+            outlierCount: Math.max(opening.outlierCount, closing.outlierCount),
+            homeAwayGap: closing.homeAwayGap,
+            drawPressure: closing.drawVsSide,
+            homeVoteShare: closing.homeVoteShare,
+            drawVoteShare: closing.drawVoteShare,
+            awayVoteShare: closing.awayVoteShare,
+            favoriteVoteShare: closing.favoriteVoteShare,
+            topGap: closing.topGap,
+            favoriteFlipShare,
+            movementStrength:
+              deltaAbsMean.home + deltaAbsMean.draw + deltaAbsMean.away,
+            usedClosingOdds: true
+          }
+        };
+      }
+
+      function buildSupervisedFeatureVector(openingRows, closingRows) {
+        if (modelNeedsClosingOdds()) {
+          return buildClosingEnhancedSupervisedFeatureVector(openingRows, closingRows);
+        }
+        return buildOpeningOnlySupervisedFeatureVector(openingRows);
+      }
+
+      function softmax(logits) {
+        const maxLogit = Math.max(...logits);
+        const exps = logits.map((value) => Math.exp(value - maxLogit));
+        const total = exps.reduce((sum, value) => sum + value, 0);
+        return exps.map((value) => value / total);
+      }
+
+      function dot(weights, vector) {
+        let sum = 0;
+        for (let index = 0; index < vector.length; index += 1) {
+          sum += weights[index] * vector[index];
+        }
+        return sum;
+      }
+
+      function predictSupervisedProbabilities(openingRows, closingRows) {
+        const payload = buildSupervisedFeatureVector(openingRows, closingRows);
+        const model = config.supervisedModel;
+        const standardized = payload.vector.map(
+          (value, index) =>
+            (value - model.normalization.means[index]) / model.normalization.scales[index]
+        );
+        const logits = model.classOrder.map(
+          (_, index) => dot(model.weights[index], standardized) + model.biases[index]
+        );
+        const probabilities = softmax(logits);
+
+        return {
+          finalProb: {
+            home: probabilities[model.classOrder.indexOf("H")],
+            draw: probabilities[model.classOrder.indexOf("D")],
+            away: probabilities[model.classOrder.indexOf("A")]
+          },
+          metrics: payload.metrics,
+          gapThreshold: model.decisionPolicy?.doubleGapThreshold ?? 0.126
+        };
+      }
+
+      function buildSupervisedExplanation(finalProb, metrics, decision) {
+        const ranked = [
+          ["home", finalProb.home],
+          ["draw", finalProb.draw],
+          ["away", finalProb.away]
+        ].sort((left, right) => right[1] - left[1]);
+
+        const parts = [];
+        if (metrics.consensus >= 0.75) {
+          parts.push("市场共识较强");
+        } else if (metrics.consensus >= 0.6) {
+          parts.push("市场共识中等");
+        } else {
+          parts.push("公司分歧偏大");
+        }
+
+        if (metrics.usedClosingOdds) {
+          if (metrics.favoriteFlipShare >= 0.34) {
+            parts.push("开盘到临场出现了较明显的热门切换");
+          } else if (metrics.movementStrength >= 0.05) {
+            parts.push("赔率变化提供了额外的方向信息");
+          } else {
+            parts.push("临场赔率整体延续了开盘方向");
+          }
+        }
+
+        if (ranked[0][0] === "draw") {
+          parts.push("监督学习模型把平局识别成当前最高概率结果");
+        } else if (ranked[1][0] === "draw" && finalProb.draw >= 0.24) {
+          parts.push("平局仍然是一个需要保留的强候选");
+        }
+
+        if (decision.type === "double") {
+          return `${parts.join("，")}，前二概率差值较小，因此收敛为 ${outcomeLabels[decision.primaryKey]}/${outcomeLabels[decision.secondaryKey]}。`;
+        }
+
+        return `${parts.join("，")}，最终由监督学习模型给出 ${outcomeLabels[decision.primaryKey]} 单结果。`;
+      }
+
+      function computeSupervisedPrediction(openingRows, closingRows) {
+        const { finalProb, metrics, gapThreshold } = predictSupervisedProbabilities(
+          openingRows,
+          closingRows
+        );
+        const ranked = [
+          { key: "home", value: finalProb.home },
+          { key: "draw", value: finalProb.draw },
+          { key: "away", value: finalProb.away }
+        ].sort((left, right) => right.value - left.value);
+
+        const topGap = ranked[0].value - ranked[1].value;
+        const decision =
+          topGap <= gapThreshold
+            ? {
+                type: "double",
+                primaryKey: ranked[0].key,
+                secondaryKey: ranked[1].key
+              }
+            : {
+                type: ranked[0].key === "draw" ? "draw-single" : "single",
+                primaryKey: ranked[0].key,
+                secondaryKey: null
+              };
+
+        return {
+          recommendation:
+            decision.type === "double"
+              ? `${outcomeLabels[decision.primaryKey]}/${outcomeLabels[decision.secondaryKey]}`
+              : outcomeLabels[decision.primaryKey],
+          allowDouble: decision.type === "double",
+          drawSingle: decision.type === "draw-single",
+          decision,
+          confidence: confidenceLabel(metrics.consensus, topGap),
+          finalProb,
+          metrics: {
+            ...metrics,
+            topGap
+          },
+          engine: "supervised",
+          engineLabel: metrics.usedClosingOdds ? "监督学习增强版" : "监督学习实验版",
+          explanation: buildSupervisedExplanation(finalProb, metrics, decision)
+        };
+      }
+
+      function computeHighConfidencePrediction(inputState) {
+        const result = computeSupervisedPrediction(inputState.openingRows, inputState.closingRows ?? null);
+        const policy = config.highConfidenceSummary?.policy ?? DEFAULT_CONFIG.highConfidenceSummary.policy;
+
+        const isAccepted =
+          !result.allowDouble &&
+          !result.drawSingle &&
+          result.finalProb[result.decision.primaryKey] >= policy.topProbabilityMin &&
+          result.metrics.topGap >= policy.topGapMin &&
+          result.metrics.consensus >= policy.consensusMin &&
+          result.metrics.favoriteVoteShare >= policy.favoriteVoteShareMin;
+
+        if (isAccepted) {
+          return {
+            ...result,
+            engine: "highConfidence",
+            engineLabel: "高置信模式",
+            explanation: `${result.explanation} 这场同时满足高置信筛选阈值，因此保留为可出手场次。`
+          };
+        }
+
+        return {
+          ...result,
+          recommendation: "不建议预测",
+          allowDouble: false,
+          drawSingle: false,
+          abstained: true,
+          engine: "highConfidence",
+          engineLabel: "高置信模式",
+          explanation:
+            "这场比赛没有同时满足高置信筛选阈值，所以当前模式下会主动放弃，而不是勉强给结果。"
+        };
+      }
+
+      function buildRuleExplanation(finalProb, metrics, decision) {
+        const parts = [];
+        const leadOutcome = outcomeLabels[decision.primaryKey];
+        const secondOutcome = decision.secondaryKey ? outcomeLabels[decision.secondaryKey] : "";
+
+        if (metrics.consensus >= 0.75) {
+          parts.push("6 家公司的初始赔率方向较一致");
+        } else if (metrics.consensus >= 0.6) {
+          parts.push("市场存在温和共识");
+        } else {
+          parts.push("公司之间分歧较明显");
+        }
+
+        if (metrics.outlierCount > 0) {
+          parts.push("已对偏离市场的公司做轻度降权");
+        }
+
+        if (finalProb.draw >= 0.28) {
+          parts.push("平局概率没有被明显拉开");
+        }
+
+        if (metrics.favoriteVoteShare < config.thresholds.favoriteVoteShareMin) {
+          parts.push("各家公司最低赔方向并不完全一致");
+        }
+
+        if (decision.type === "draw-single") {
+          return (
+            parts.join("，") +
+            "，同时主客两端接近，因此把平局提升为单结果。"
+          );
+        }
+
+        if (decision.type === "double") {
+          return (
+            parts.join("，") +
+            `，因此将结果收敛为 ${leadOutcome}/${secondOutcome} 双结果。`
+          );
+        }
+
+        return parts.join("，") + `，最终偏向 ${leadOutcome}。`;
+      }
+
+      function computeRulePrediction(rows) {
+        const favoriteVotes = { home: 0, draw: 0, away: 0 };
+        rows.forEach((row) => {
+          const ordered = [
+            { key: "home", odds: row.home },
+            { key: "draw", odds: row.draw },
+            { key: "away", odds: row.away }
+          ].sort((left, right) => left.odds - right.odds);
+          favoriteVotes[ordered[0].key] += 1;
+        });
+
+        const probabilityRows = rows.map((row) =>
+          toProbabilityRow(row.home, row.draw, row.away)
+        );
+
+        const meanProb = {
+          home: average(probabilityRows.map((row) => row.home)),
+          draw: average(probabilityRows.map((row) => row.draw)),
+          away: average(probabilityRows.map((row) => row.away))
+        };
+
+        const distances = probabilityRows.map((row) => distance(row, meanProb));
+        const meanDistance = average(distances);
+        const stdDistance = standardDeviation(distances);
+        const outlierCutoff = Math.max(0.045, meanDistance + stdDistance);
+
+        const weights = distances.map((value) => {
+          if (value <= outlierCutoff) {
+            return 1;
+          }
+          return clamp(1 - (value - outlierCutoff) * 8, 0.52, 0.92);
+        });
+
+        const weightSum = weights.reduce((sum, value) => sum + value, 0);
+        const finalProb = normalizeProbabilities({
+          home: probabilityRows.reduce((sum, row, index) => sum + row.home * weights[index], 0) / weightSum,
+          draw: probabilityRows.reduce((sum, row, index) => sum + row.draw * weights[index], 0) / weightSum,
+          away: probabilityRows.reduce((sum, row, index) => sum + row.away * weights[index], 0) / weightSum
+        });
+
+        const dispersion =
+          average([
+            standardDeviation(probabilityRows.map((row) => row.home)),
+            standardDeviation(probabilityRows.map((row) => row.draw)),
+            standardDeviation(probabilityRows.map((row) => row.away))
+          ]);
+
+        const consensus = clamp(1 - meanDistance / 0.09, 0, 1);
+        const outlierCount = distances.filter((value) => value > outlierCutoff).length;
+        const homeAwayGap = Math.abs(finalProb.home - finalProb.away);
+        const drawPressure = finalProb.draw - average([finalProb.home, finalProb.away]);
+        const strongestSide = Math.max(finalProb.home, finalProb.away);
+        const drawGapToLeader = strongestSide - finalProb.draw;
+
+        const ranked = [
+          { key: "home", value: finalProb.home },
+          { key: "draw", value: finalProb.draw },
+          { key: "away", value: finalProb.away }
+        ].sort((left, right) => right.value - left.value);
+
+        const topGap = ranked[0].value - ranked[1].value;
+        const favoriteVoteShare = favoriteVotes[ranked[0].key] / rows.length;
+        const homeVoteShare = favoriteVotes.home / rows.length;
+        const drawVoteShare = favoriteVotes.draw / rows.length;
+        const awayVoteShare = favoriteVotes.away / rows.length;
+        const sideLeaderKey = finalProb.home >= finalProb.away ? "home" : "away";
+        const sideLeaderProb = finalProb[sideLeaderKey];
+        const sideLeaderVoteShare = favoriteVotes[sideLeaderKey] / rows.length;
+        const splitSides = Math.max(homeVoteShare, awayVoteShare) <= config.thresholds.splitVoteShareMax;
+
+        const drawSingle =
+          finalProb.draw >= config.thresholds.drawMinimum &&
+          homeAwayGap <= config.thresholds.drawHomeAwayGapMax &&
+          dispersion <= config.thresholds.drawDispersionMax &&
+          (
+            drawGapToLeader <= config.thresholds.drawLeadSlack ||
+            (splitSides && drawGapToLeader <= config.thresholds.drawSplitLeadSlack)
+          );
+
+        const strongNonDrawSingle =
+          ranked[0].key !== "draw" &&
+          ranked[0].value >= config.thresholds.strongSingleProbabilityMin &&
+          topGap >= config.thresholds.strongSingleGapMin &&
+          favoriteVoteShare >= config.thresholds.strongSingleVoteShareMin &&
+          finalProb.draw <= config.thresholds.strongSingleDrawMax;
+
+        const sideDrawDouble =
+          !drawSingle &&
+          !strongNonDrawSingle &&
+          sideLeaderKey !== "draw" &&
+          finalProb.draw >= config.thresholds.sideDrawDoubleMin &&
+          (sideLeaderProb - finalProb.draw) <= config.thresholds.sideDrawDoubleGapMax;
+
+        const homeAwayDouble =
+          !drawSingle &&
+          !strongNonDrawSingle &&
+          !sideDrawDouble &&
+          splitSides &&
+          homeAwayGap <= config.thresholds.homeAwayDoubleGapMax &&
+          finalProb.draw < config.thresholds.drawMinimum;
+
+        let decision;
+        if (drawSingle) {
+          decision = {
+            type: "draw-single",
+            primaryKey: "draw",
+            secondaryKey: null
+          };
+        } else if (strongNonDrawSingle) {
+          decision = {
+            type: "single",
+            primaryKey: ranked[0].key,
+            secondaryKey: null
+          };
+        } else if (sideDrawDouble) {
+          decision = {
+            type: "double",
+            primaryKey: sideLeaderKey,
+            secondaryKey: "draw"
+          };
+        } else if (homeAwayDouble) {
+          decision = {
+            type: "double",
+            primaryKey: "home",
+            secondaryKey: "away"
+          };
+        } else if (ranked[0].key === "draw" || finalProb.draw >= config.thresholds.drawMinimum) {
+          decision = {
+            type: "draw-single",
+            primaryKey: "draw",
+            secondaryKey: null
+          };
+        } else {
+          decision = {
+            type: "double",
+            primaryKey: ranked[0].key,
+            secondaryKey: ranked[1].key === ranked[0].key ? ranked[2].key : ranked[1].key
+          };
+        }
+
+        const recommendation =
+          decision.type === "double"
+            ? `${outcomeLabels[decision.primaryKey]}/${outcomeLabels[decision.secondaryKey]}`
+            : outcomeLabels[decision.primaryKey];
+
+        return {
+          recommendation,
+          allowDouble: decision.type === "double",
+          drawSingle: decision.type === "draw-single",
+          decision,
+          confidence: confidenceLabel(consensus, topGap),
+          confidenceProfile: buildRuleConfidenceProfile(
+            confidenceLabel(consensus, topGap),
+            ranked,
+            finalProb,
+            topGap
+          ),
+          finalProb,
+          metrics: {
+            consensus,
+            dispersion,
+            outlierCount,
+            homeAwayGap,
+            drawPressure,
+            drawGapToLeader,
+            homeVoteShare,
+            drawVoteShare,
+            awayVoteShare,
+            favoriteVoteShare,
+            topGap,
+            strongNonDrawSingle
+          },
+          engine: "rule",
+          engineLabel: "默认规则模型",
+          explanation: buildRuleExplanation(finalProb, {
+            consensus,
+            dispersion,
+            outlierCount,
+            homeAwayGap,
+            drawPressure,
+            favoriteVoteShare
+          }, decision)
+        };
+      }
+
+      function computePrediction(inputState) {
+        if (activeEngine === "highConfidence" && config.supervisedModel) {
+          return computeHighConfidencePrediction(inputState);
+        }
+        if (activeEngine === "supervised" && config.supervisedModel) {
+          return computeSupervisedPrediction(
+            inputState.openingRows,
+            inputState.closingRows ?? null
+          );
+        }
+        return computeRulePrediction(inputState.openingRows);
+      }
+
+      function createRow(company, index, group) {
+        const row = document.createElement("div");
+        row.className = "bookmaker-row";
+        row.innerHTML = `
+          <div class="bookmaker-name">${company}</div>
+          <input data-kind="paste" data-group="${group}" data-index="${index}" placeholder="整行粘贴，例如 1.72 3.75 4.85" />
+          <input data-kind="home" data-group="${group}" data-index="${index}" inputmode="decimal" placeholder="主胜" />
+          <input data-kind="draw" data-group="${group}" data-index="${index}" inputmode="decimal" placeholder="平局" />
+          <input data-kind="away" data-group="${group}" data-index="${index}" inputmode="decimal" placeholder="客胜" />
+        `;
+        return row;
+      }
+
+      function getRowInput(group, index, kind) {
+        return document.querySelector(
+          `input[data-group="${group}"][data-index="${index}"][data-kind="${kind}"]`
+        );
+      }
+
+      function applyTripletToRow(group, index, triplet, sourceValue = "") {
+        getRowInput(group, index, "home").value = triplet.home;
+        getRowInput(group, index, "draw").value = triplet.draw;
+        getRowInput(group, index, "away").value = triplet.away;
+        if (sourceValue) {
+          getRowInput(group, index, "paste").value = sourceValue.trim();
+        }
+      }
+
+      function handleCombinedPaste(group, index, rawValue) {
+        const triplet = extractOddsTriplet(rawValue);
+        if (!triplet) {
+          setNotice(`无法识别 ${config.companies[index]} 的整行赔率，请粘贴 3 个数字。`);
+          return false;
+        }
+
+        applyTripletToRow(group, index, triplet, rawValue);
+        setNotice("");
+        return true;
+      }
+
+      function handleBulkPaste(group, rawValue) {
+        const lines = rawValue
+          .split(/\r?\n/)
+          .map((line) => line.trim())
+          .filter(Boolean);
+
+        if (!lines.length) {
+          return false;
+        }
+
+        if (lines.length > config.companies.length) {
+          setNotice(`最多只能一次粘贴 ${config.companies.length} 行赔率。`);
+          return false;
+        }
+
+        for (let index = 0; index < lines.length; index += 1) {
+          const triplet = extractOddsTriplet(lines[index]);
+          if (!triplet) {
+            setNotice(`无法识别第 ${index + 1} 行赔率，请检查 ${config.companies[index]} 这一行。`);
+            return false;
+          }
+          applyTripletToRow(group, index, triplet, lines[index]);
+        }
+
+        getBulkPasteEl(group).value = lines.join("\n");
+        setNotice("");
+        return true;
+      }
+
+      function bindRowEvents(group, index) {
+        const pasteInput = getRowInput(group, index, "paste");
+        const oddsInputs = ["home", "draw", "away"].map((kind) =>
+          getRowInput(group, index, kind)
+        );
+
+        pasteInput.addEventListener("paste", (event) => {
+          const text = event.clipboardData?.getData("text") ?? "";
+          if (!text.trim()) {
+            return;
+          }
+          event.preventDefault();
+          handleCombinedPaste(group, index, text);
+        });
+
+        pasteInput.addEventListener("change", () => {
+          if (!pasteInput.value.trim()) {
+            return;
+          }
+          handleCombinedPaste(group, index, pasteInput.value);
+        });
+
+        oddsInputs.forEach((input) => {
+          input.addEventListener("paste", (event) => {
+            const text = event.clipboardData?.getData("text") ?? "";
+            const triplet = extractOddsTriplet(text);
+            if (!triplet) {
+              return;
+            }
+            event.preventDefault();
+            applyTripletToRow(group, index, triplet, text);
+            setNotice("");
+          });
+        });
+      }
+
+      function bindBulkPaste(group) {
+        const bulkInput = getBulkPasteEl(group);
+
+        bulkInput.addEventListener("paste", (event) => {
+          const text = event.clipboardData?.getData("text") ?? "";
+          if (!text.trim()) {
+            return;
+          }
+          event.preventDefault();
+          handleBulkPaste(group, text);
+        });
+
+        bulkInput.addEventListener("change", () => {
+          if (!bulkInput.value.trim()) {
+            return;
+          }
+          handleBulkPaste(group, bulkInput.value);
+        });
+      }
+
+      function renderInputs() {
+        const renderTable = (container, group) => {
+          container.innerHTML = "";
+          const header = document.createElement("div");
+          header.className = "table-head";
+          header.innerHTML = `
+            <div>博彩公司</div>
+            <div>整行粘贴</div>
+            <div>主胜</div>
+            <div>平局</div>
+            <div>客胜</div>
+          `;
+          container.appendChild(header);
+
+          config.companies.forEach((company, index) => {
+            container.appendChild(createRow(company, index, group));
+            bindRowEvents(group, index);
+          });
+        };
+
+        renderTable(openingOddsTableEl, "opening");
+        renderTable(closingOddsTableEl, "closing");
+      }
+
+      function renderChips() {
+        const items = [
+          "固定 6 家公司",
+          "初始赔率",
+          "去水处理",
+          `双结果 ${config.doublePolicyLabel}`,
+          `${config.calibration.label} ${config.calibration.version}`,
+          "当前版本只使用初始赔率"
+        ];
+        chipsEl.innerHTML = items.map((item) => `<span class="chip">${item}</span>`).join("");
+      }
+
+      function renderEngineButtons() {
+        ruleEngineButtonEl.classList.toggle("active", activeEngine === "rule");
+        supervisedEngineButtonEl.classList.toggle("active", activeEngine === "supervised");
+        highConfidenceEngineButtonEl.classList.toggle("active", activeEngine === "highConfidence");
+        supervisedEngineButtonEl.disabled = false;
+        highConfidenceEngineButtonEl.disabled = false;
+        supervisedEngineButtonEl.title = !config.supervisedModel
+          ? "当前未加载监督学习模型"
+          : modelNeedsClosingOdds()
+            ? "启用前请补充 6 家公司的临场赔率"
+            : "";
+        highConfidenceEngineButtonEl.title = !config.supervisedModel
+          ? "当前未加载监督学习模型，无法启用高置信筛选"
+          : !config.highConfidenceSummary?.enabled
+            ? "当前会话未启用高置信筛选"
+            : modelNeedsClosingOdds()
+              ? "高置信模式同样需要 6 家公司的临场赔率"
+              : "";
+        renderCurrentMode();
+      }
+
+      function getCurrentEngineLabel() {
+        if (activeEngine === "highConfidence") {
+          return "高置信模式";
+        }
+        if (activeEngine === "supervised") {
+          return modelNeedsClosingOdds() ? "监督学习增强版" : "监督学习实验版";
+        }
+        return "默认规则模型";
+      }
+
+      function renderCurrentMode() {
+        currentModeValueEl.textContent = getCurrentEngineLabel();
+      }
+
+      function renderIdleState() {
+        const engineLabel = getCurrentEngineLabel();
+        const helperText =
+          activeEngine === "highConfidence"
+            ? "当前已切到高置信模式，只有满足阈值的场次才会输出单结果。"
+            : activeEngine === "supervised"
+              ? "当前已切到监督学习模型，生成预测时会优先使用这一引擎。"
+              : "当前使用默认规则模型。";
+
+        resultRootEl.innerHTML = `
+          <div class="result-hero">
+            <div class="result-kicker">${engineLabel}</div>
+            <div class="result-title">尚未生成预测</div>
+            <div class="result-meta">${helperText}</div>
+          </div>
+          <div class="method">
+            输入 6 家公司的赔率后点击“生成预测”。
+          </div>
+        `;
+      }
+
+      function renderResult(result, matchName) {
+        let methodHtml;
+        if (result.engine === "highConfidence") {
+          methodHtml = `高置信模式：只保留同时满足“最高概率至少 ${(config.highConfidenceSummary.policy.topProbabilityMin * 100).toFixed(1)}%”“前二差值至少 ${(config.highConfidenceSummary.policy.topGapMin * 100).toFixed(1)}%”“市场共识至少 ${(config.highConfidenceSummary.policy.consensusMin * 100).toFixed(0)}%”和“最低赔一致度至少 ${(config.highConfidenceSummary.policy.favoriteVoteShareMin * 100).toFixed(0)}%”的单结果场次。
+               当前验证集一共 ${config.highConfidenceSummary.metrics.matches} 场，其中保留 ${config.highConfidenceSummary.metrics.acceptedCount} 场，覆盖率 ${(config.highConfidenceSummary.metrics.acceptedRate * 100).toFixed(1)}%，保留场次单结果准确率 ${(config.highConfidenceSummary.metrics.acceptedAccuracy * 100).toFixed(1)}%。
+               ${modelNeedsClosingOdds() ? "这版高置信筛选建立在开盘与临场赔率共同判断的监督学习增强模型上。" : "这版高置信筛选建立在监督学习实验模型上。"}
+               ${config.highConfidenceSummary.note}`;
+        } else if (result.engine === "supervised") {
+          methodHtml = `监督学习模型：验证集 top1 准确率 ${(config.supervisedSummary.accuracySummary.top1Accuracy * 100).toFixed(1)}%，单结果准确率 ${(config.supervisedSummary.accuracySummary.singlePredictionAccuracy * 100).toFixed(1)}%，整体命中率 ${(config.supervisedSummary.accuracySummary.inclusiveHitRate * 100).toFixed(1)}%，双结果占比 ${(config.supervisedSummary.accuracySummary.doubleRate * 100).toFixed(1)}%。
+               ${modelNeedsClosingOdds() ? "这版会把开盘到临场的赔率变化也一起纳入判断。" : "当前为实验引擎，主要用于和默认规则模型做对比。"}
+               ${config.supervisedSummary.note}`;
+        } else {
+          methodHtml = `平局单关门槛：平局概率至少 ${(config.thresholds.drawMinimum * 100).toFixed(1)}%，主客差不超过 ${(config.thresholds.drawHomeAwayGapMax * 100).toFixed(1)}%。
+               主胜/客胜单关门槛：综合概率至少 ${(config.thresholds.strongSingleProbabilityMin * 100).toFixed(1)}%，前二差值至少 ${(config.thresholds.strongSingleGapMin * 100).toFixed(1)}%，且最低赔一致度不低于 ${(config.thresholds.strongSingleVoteShareMin * 100).toFixed(0)}%。
+               其余中间地带会优先收敛为 胜/平、平/负 或 胜/负，而不是直接追最低赔率一方。
+               信心等级已按验证集重新校准：高档要求市场共识至少 79 分，且前二差值至少 17.5%；这样高档单结果准确率约 60.8%，但覆盖率会下降。
+               当前参数版本：${config.calibration.version}，样本 ${config.calibration.sampleSize.total} 场，来源 ${config.calibration.sourceSummary}。
+               验证集单结果准确率 ${(config.calibration.accuracySummary.singlePredictionAccuracy * 100).toFixed(1)}%，整体命中率 ${(config.calibration.accuracySummary.inclusiveHitRate * 100).toFixed(1)}%，双结果占比 ${(config.calibration.accuracySummary.doubleRate * 100).toFixed(1)}%。
+               ${config.calibration.note}`;
+        }
+
+        const resultModeLabel = result.abstained
+          ? "主动放弃"
+          : result.drawSingle
+            ? "平局单关"
+            : result.allowDouble
+              ? "双结果收敛"
+              : "单结果";
+
+        resultRootEl.innerHTML = `
+          <div class="result-hero">
+            <div class="result-kicker">${result.engineLabel} · ${resultModeLabel}</div>
+            <div class="result-title">${result.recommendation}</div>
+            <div class="result-meta">
+              ${matchName ? `${matchName} · ` : ""}${result.engine === "rule" ? `结构标签：${result.confidenceProfile?.label ?? result.confidence}` : `信心等级：${result.confidence}`}
+            </div>
+            <div class="bars">
+              ${["home", "draw", "away"]
+                .map(
+                  (key) => `
+                    <div class="bar-row">
+                      <div class="bar-label">
+                        <span>${outcomeLabels[key]}</span>
+                        <span>${formatPercent(result.finalProb[key])}</span>
+                      </div>
+                      <div class="bar-track">
+                        <div class="bar-fill" style="width: ${result.finalProb[key] * 100}%"></div>
+                      </div>
+                    </div>
+                  `
+                )
+                .join("")}
+            </div>
+          </div>
+          <div class="stats">
+            <div class="stat-card">
+              <div>市场共识</div>
+              <strong>${formatScore(result.metrics.consensus)}</strong>
+            </div>
+            <div class="stat-card">
+              <div>分歧强度</div>
+              <strong>${formatPercent(result.metrics.dispersion)}</strong>
+            </div>
+            <div class="stat-card">
+              <div>异常公司</div>
+              <strong>${result.metrics.outlierCount}</strong>
+            </div>
+            <div class="stat-card">
+              <div>前二差值</div>
+              <strong>${formatPercent(result.metrics.topGap)}</strong>
+            </div>
+            <div class="stat-card">
+              <div>最低赔一致度</div>
+              <strong>${formatPercent(result.metrics.favoriteVoteShare)}</strong>
+            </div>
+            <div class="stat-card">
+              <div>平局最低赔占比</div>
+              <strong>${formatPercent(result.metrics.drawVoteShare)}</strong>
+            </div>
+          </div>
+          <div class="explanation">${result.explanation}${result.engine === "rule" && result.confidenceProfile?.note ? ` 结构判读：${result.confidenceProfile.note}` : ""}</div>
+          <div class="method">${methodHtml}</div>
+        `;
+      }
+
+      function collectRows(group, required = true) {
+        const rows = [];
+        let hasAnyValue = false;
+        for (let index = 0; index < config.companies.length; index += 1) {
+          const home = parseOdds(getRowInput(group, index, "home").value);
+          const draw = parseOdds(getRowInput(group, index, "draw").value);
+          const away = parseOdds(getRowInput(group, index, "away").value);
+
+          const values = [home, draw, away];
+          const filledCount = values.filter(Number.isFinite).length;
+          if (filledCount > 0) {
+            hasAnyValue = true;
+          }
+
+          if (!required && filledCount === 0) {
+            rows.push(null);
+            continue;
+          }
+
+          if (!values.every(Number.isFinite)) {
+            throw new Error(`请先完整填写 ${config.companies[index]} 的三项${group === "closing" ? "临场" : "初始"}赔率。`);
+          }
+
+          if (values.some((value) => value <= 1.01)) {
+            throw new Error(`${config.companies[index]} 的${group === "closing" ? "临场" : "初始"}赔率必须大于 1.01。`);
+          }
+
+          rows.push({ home, draw, away });
+        }
+
+        if (!required && !hasAnyValue) {
+          return null;
+        }
+
+        if (!required && rows.some((row) => row === null)) {
+          throw new Error("如果要使用监督学习增强版，请把 6 家公司的临场赔率全部填完整。");
+        }
+
+        return rows;
+      }
+
+      function setNotice(message) {
+        noticeEl.textContent = message;
+      }
+
+      function fillSampleOdds() {
+        SAMPLE_OPENING_ODDS.forEach((row, index) => {
+          applyTripletToRow("opening", index, {
+            home: row[0],
+            draw: row[1],
+            away: row[2]
+          }, row.join(" "));
+        });
+        openingBulkPasteEl.value = SAMPLE_OPENING_ODDS.map((row) => row.join(" ")).join("\n");
+        SAMPLE_CLOSING_ODDS.forEach((row, index) => {
+          applyTripletToRow("closing", index, {
+            home: row[0],
+            draw: row[1],
+            away: row[2]
+          }, row.join(" "));
+        });
+        closingBulkPasteEl.value = SAMPLE_CLOSING_ODDS.map((row) => row.join(" ")).join("\n");
+        if (!matchNameEl.value) {
+          matchNameEl.value = "示例比赛";
+        }
+        setNotice("");
+      }
+
+      function clearInputs() {
+        document.querySelectorAll("input[data-kind]").forEach((input) => {
+          input.value = "";
+        });
+        document.querySelectorAll("textarea[data-bulk-group]").forEach((input) => {
+          input.value = "";
+        });
+        matchNameEl.value = "";
+        lastPredictionState = null;
+        setNotice("");
+        renderIdleState();
+      }
+
+      function rpcNotify(method, params) {
+        window.parent.postMessage({ jsonrpc: "2.0", method, params }, "*");
+      }
+
+      function rpcRequest(method, params) {
+        return new Promise((resolve, reject) => {
+          const id = ++rpcId;
+          pendingRequests.set(id, { resolve, reject });
+          window.parent.postMessage({ jsonrpc: "2.0", id, method, params }, "*");
+        });
+      }
+
+      async function initializeBridge() {
+        await rpcRequest("ui/initialize", {
+          appInfo: { name: "football-odds-predictor-widget", version: "0.1.0" },
+          appCapabilities: {},
+          protocolVersion: "2026-01-26"
+        });
+        rpcNotify("ui/notifications/initialized", {});
+      }
+
+      function hydrateFromToolOutput(payload) {
+        if (!payload) {
+          return;
+        }
+        config = {
+          companies: payload.companies ?? DEFAULT_CONFIG.companies,
+          thresholds: payload.thresholds ?? DEFAULT_CONFIG.thresholds,
+          doublePolicyLabel: payload.doublePolicyLabel ?? DEFAULT_CONFIG.doublePolicyLabel,
+          calibration: payload.calibration ?? DEFAULT_CONFIG.calibration,
+          supervisedModel: payload.supervisedModel ?? DEFAULT_CONFIG.supervisedModel,
+          supervisedSummary: payload.supervisedSummary ?? DEFAULT_CONFIG.supervisedSummary,
+          highConfidenceSummary:
+            payload.highConfidenceSummary ?? DEFAULT_CONFIG.highConfidenceSummary
+        };
+        renderChips();
+        renderInputs();
+        renderEngineButtons();
+        if (payload.matchName) {
+          matchNameEl.value = payload.matchName;
+        }
+      }
+
+      window.addEventListener(
+        "message",
+        (event) => {
+          if (event.source !== window.parent) {
+            return;
+          }
+          const message = event.data;
+          if (!message || message.jsonrpc !== "2.0") {
+            return;
+          }
+          if (typeof message.id === "number") {
+            const pending = pendingRequests.get(message.id);
+            if (!pending) {
+              return;
+            }
+            pendingRequests.delete(message.id);
+            if (message.error) {
+              pending.reject(message.error);
+              return;
+            }
+            pending.resolve(message.result);
+            return;
+          }
+          if (message.method === "ui/notifications/tool-result") {
+            toolOutput = message.params?.structuredContent ?? null;
+            hydrateFromToolOutput(toolOutput);
+          }
+        },
+        { passive: true }
+      );
+
+      predictButtonEl.addEventListener("click", () => {
+        try {
+          const inputState = {
+            openingRows: collectRows("opening", true),
+            closingRows: collectRows("closing", false)
+          };
+          const result = computePrediction(inputState);
+          lastPredictionState = {
+            ...inputState,
+            matchName: matchNameEl.value.trim()
+          };
+          renderResult(result, matchNameEl.value.trim());
+          setNotice("");
+        } catch (error) {
+          setNotice(error.message);
+        }
+      });
+
+      ruleEngineButtonEl.addEventListener("click", () => {
+        activeEngine = "rule";
+        renderEngineButtons();
+        if (lastPredictionState) {
+          renderResult(computePrediction(lastPredictionState), lastPredictionState.matchName);
+          setNotice("已切换到默认规则模型。");
+        } else {
+          setNotice("已切换到默认规则模型。输入赔率后点击“生成预测”。");
+          renderIdleState();
+        }
+      });
+
+      supervisedEngineButtonEl.addEventListener("click", () => {
+        if (!config.supervisedModel) {
+          setNotice("当前会话还没有加载监督学习实验模型。");
+          return;
+        }
+        activeEngine = "supervised";
+        renderEngineButtons();
+        if (lastPredictionState) {
+          try {
+            renderResult(computePrediction(lastPredictionState), lastPredictionState.matchName);
+            setNotice(`已切换到${getCurrentEngineLabel()}。`);
+          } catch (error) {
+            setNotice(error.message);
+          }
+        } else {
+          setNotice(`已切换到${getCurrentEngineLabel()}。输入赔率后点击“生成预测”。`);
+          renderIdleState();
+        }
+      });
+
+      highConfidenceEngineButtonEl.addEventListener("click", () => {
+        if (!config.supervisedModel) {
+          setNotice("当前会话还没有加载监督学习模型，无法启用高置信模式。");
+          return;
+        }
+        if (!config.highConfidenceSummary?.enabled) {
+          setNotice("当前会话还没有启用高置信筛选。");
+          return;
+        }
+        activeEngine = "highConfidence";
+        renderEngineButtons();
+        if (lastPredictionState) {
+          try {
+            renderResult(computePrediction(lastPredictionState), lastPredictionState.matchName);
+            setNotice("已切换到高置信模式。只有通过筛选的比赛才会输出单结果。");
+          } catch (error) {
+            setNotice(error.message);
+          }
+        } else {
+          setNotice("已切换到高置信模式。输入赔率后点击“生成预测”，未通过筛选的比赛会显示“不建议预测”。");
+          renderIdleState();
+        }
+      });
+
+      sampleButtonEl.addEventListener("click", fillSampleOdds);
+      resetButtonEl.addEventListener("click", clearInputs);
+      bindBulkPaste("opening");
+      bindBulkPaste("closing");
+
+      renderChips();
+      renderInputs();
+      renderEngineButtons();
+      renderIdleState();
+      hydrateFromToolOutput(toolOutput);
+      initializeBridge().catch(() => {
+        /* Widget can still work without the host bridge. */
+      });
+    </script>
+  </body>
+</html>
