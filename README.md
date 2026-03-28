@@ -48,6 +48,27 @@ vercel dev
 - `/api/predict` 轻量后端接口
 - 公开访问，不加登录
 
+## Streamlit 版本
+
+如果你想部署到 Streamlit Community Cloud，可以直接使用：
+
+- [streamlit_app.py](/Users/huanglu/Projects/WORD 编辑/plugins/football-odds-predictor/streamlit_app.py)
+- [predictor_py.py](/Users/huanglu/Projects/WORD 编辑/plugins/football-odds-predictor/predictor_py.py)
+- [requirements.txt](/Users/huanglu/Projects/WORD 编辑/plugins/football-odds-predictor/requirements.txt)
+
+本地运行：
+
+```bash
+python3 -m pip install -r requirements.txt
+python3 -m streamlit run streamlit_app.py
+```
+
+部署到 Streamlit Community Cloud 时：
+
+1. 选择这个 GitHub 仓库
+2. Main file path 填 `streamlit_app.py`
+3. Python 依赖会从 `requirements.txt` 自动安装
+
 ## 安装为本地插件
 
 当前 `.mcp.json` 里的 `server.js` 路径指向当前这台 Mac 上的工作区绝对路径，因此这个仓库克隆到别的目录后，需要按实际路径更新一次 [`.mcp.json`](/Users/huanglu/Projects/WORD 编辑/plugins/football-odds-predictor/.mcp.json)。
