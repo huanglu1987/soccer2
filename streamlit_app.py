@@ -92,7 +92,6 @@ def collect_rows() -> list[dict]:
             if not triplet:
                 raise ValueError(f"{company} 的整行赔率无法识别。")
             home, draw, away = triplet
-            apply_triplet(index, triplet, paste_value)
         else:
             try:
                 home = float(st.session_state[f"home_{index}"])
@@ -153,17 +152,11 @@ with st.container(border=True):
     )
     action1, action2, action3 = st.columns(3)
     with action1:
-        if st.button("应用批量粘贴", use_container_width=True):
-            apply_bulk_paste()
-            st.rerun()
+        st.button("应用批量粘贴", use_container_width=True, on_click=apply_bulk_paste)
     with action2:
-        if st.button("填入示例", use_container_width=True):
-            fill_sample()
-            st.rerun()
+        st.button("填入示例", use_container_width=True, on_click=fill_sample)
     with action3:
-        if st.button("清空", use_container_width=True):
-            clear_form()
-            st.rerun()
+        st.button("清空", use_container_width=True, on_click=clear_form)
 
 with st.container(border=True):
     st.markdown("#### 固定公司录入")
