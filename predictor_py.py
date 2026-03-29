@@ -222,6 +222,9 @@ def build_rule_explanation(
     if metrics["favoriteVoteShare"] < THRESHOLDS["favoriteVoteShareMin"]:
         parts.append("各家公司最低赔方向并不完全一致")
 
+    if decision["type"] == "abstain":
+        return f"{'，'.join(parts)}，当前更适合把这场视为低确定性场次，主动放弃单押。"
+
     if decision["type"] == "draw-single":
         return f"{'，'.join(parts)}，同时主客两端接近，因此把平局提升为单结果。"
 
@@ -333,6 +336,8 @@ def compute_rule_prediction(rows: list[dict]) -> dict:
     side_leader_key = "home" if final_prob["home"] >= final_prob["away"] else "away"
     side_leader_prob = final_prob[side_leader_key]
     split_sides = max(home_vote_share, away_vote_share) <= THRESHOLDS["splitVoteShareMax"]
+    leader_key = ranked[0]["key"]
+    second_key = ranked[1]["key"]
 
     draw_single = (
         final_prob["draw"] >= THRESHOLDS["drawMinimum"]
@@ -369,35 +374,63 @@ def compute_rule_prediction(rows: list[dict]) -> dict:
         and final_prob["draw"] < THRESHOLDS["drawMinimum"]
     )
 
-    if draw_single:
-        decision = {"type": "draw-single", "primaryKey": "draw", "secondaryKey": None}
-    elif strong_non_draw_single:
-        decision = {"type": "single", "primaryKey": ranked[0]["key"], "secondaryKey": None}
-    elif side_draw_double:
-        decision = {"type": "double", "primaryKey": side_leader_key, "secondaryKey": "draw"}
-    elif home_away_double:
-        decision = {"type": "double", "primaryKey": "home", "secondaryKey": "away"}
-    elif ranked[0]["key"] == "draw" or final_prob["draw"] >= THRESHOLDS["drawMinimum"]:
-        decision = {"type": "draw-single", "primaryKey": "draw", "secondaryKey": None}
-    else:
-        secondary_key = ranked[2]["key"] if ranked[1]["key"] == ranked[0]["key"] else ranked[1]["key"]
-        decision = {"type": "double", "primaryKey": ranked[0]["key"], "secondaryKey": secondary_key}
-
-    recommendation = (
-        f"{OUTCOME_LABELS[decision['primaryKey']]}/{OUTCOME_LABELS[decision['secondaryKey']]}"
-        if decision["type"] == "double"
-        else OUTCOME_LABELS[decision["primaryKey"]]
-    )
-
     base_confidence = confidence_label(consensus, top_gap)
     confidence_profile = build_rule_confidence_profile(
         base_confidence, ranked, final_prob, top_gap
+    )
+
+    if draw_single:
+        decision = {"type": "draw-single", "primaryKey": "draw", "secondaryKey": None}
+    elif base_confidence == "高" and strong_non_draw_single:
+        decision = {"type": "single", "primaryKey": ranked[0]["key"], "secondaryKey": None}
+    elif base_confidence == "高":
+        if side_draw_double:
+            decision = {"type": "double", "primaryKey": side_leader_key, "secondaryKey": "draw"}
+        elif home_away_double:
+            decision = {"type": "double", "primaryKey": "home", "secondaryKey": "away"}
+        elif leader_key == "draw" or final_prob["draw"] >= THRESHOLDS["drawMinimum"]:
+            decision = {"type": "draw-single", "primaryKey": "draw", "secondaryKey": None}
+        else:
+            secondary_key = ranked[2]["key"] if second_key == leader_key else second_key
+            decision = {"type": "double", "primaryKey": leader_key, "secondaryKey": secondary_key}
+    elif base_confidence == "中":
+        if confidence_profile["label"] == "中-偏平":
+            preferred_side = (
+                "home" if final_prob["home"] >= final_prob["away"] else "away"
+            ) if leader_key == "draw" else leader_key
+            decision = {"type": "double", "primaryKey": preferred_side, "secondaryKey": "draw"}
+        elif confidence_profile["label"] == "中-偏主":
+            decision = {
+                "type": "double",
+                "primaryKey": "home",
+                "secondaryKey": "draw" if second_key == "draw" or final_prob["draw"] >= 0.27 else "away",
+            }
+        else:
+            decision = {
+                "type": "double",
+                "primaryKey": "away",
+                "secondaryKey": "draw" if second_key == "draw" or final_prob["draw"] >= 0.27 else "home",
+            }
+    elif confidence_profile["label"] == "谨慎-主客胶着" and top_gap >= 0.04:
+        decision = {"type": "double", "primaryKey": "home", "secondaryKey": "away"}
+    else:
+        decision = {"type": "abstain", "primaryKey": leader_key, "secondaryKey": None}
+
+    recommendation = (
+        "不建议单押"
+        if decision["type"] == "abstain"
+        else (
+            f"{OUTCOME_LABELS[decision['primaryKey']]}/{OUTCOME_LABELS[decision['secondaryKey']]}"
+            if decision["type"] == "double"
+            else OUTCOME_LABELS[decision["primaryKey"]]
+        )
     )
 
     return {
         "companies": FIXED_COMPANIES,
         "recommendation": recommendation,
         "allowDouble": decision["type"] == "double",
+        "abstained": decision["type"] == "abstain",
         "drawSingle": decision["type"] == "draw-single",
         "decision": decision,
         "confidence": base_confidence,

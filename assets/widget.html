@@ -1304,6 +1304,10 @@
           parts.push("各家公司最低赔方向并不完全一致");
         }
 
+        if (decision.type === "abstain") {
+          return `${parts.join("，")}，当前更适合把这场视为低确定性场次，主动放弃单押。`;
+        }
+
         if (decision.type === "draw-single") {
           return (
             parts.join("，") +
@@ -1388,8 +1392,9 @@
         const awayVoteShare = favoriteVotes.away / rows.length;
         const sideLeaderKey = finalProb.home >= finalProb.away ? "home" : "away";
         const sideLeaderProb = finalProb[sideLeaderKey];
-        const sideLeaderVoteShare = favoriteVotes[sideLeaderKey] / rows.length;
         const splitSides = Math.max(homeVoteShare, awayVoteShare) <= config.thresholds.splitVoteShareMax;
+        const leaderKey = ranked[0].key;
+        const secondKey = ranked[1].key;
 
         const drawSingle =
           finalProb.draw >= config.thresholds.drawMinimum &&
@@ -1422,6 +1427,14 @@
           homeAwayGap <= config.thresholds.homeAwayDoubleGapMax &&
           finalProb.draw < config.thresholds.drawMinimum;
 
+        const baseConfidence = confidenceLabel(consensus, topGap);
+        const confidenceProfile = buildRuleConfidenceProfile(
+          baseConfidence,
+          ranked,
+          finalProb,
+          topGap
+        );
+
         let decision;
         if (drawSingle) {
           decision = {
@@ -1429,55 +1442,91 @@
             primaryKey: "draw",
             secondaryKey: null
           };
-        } else if (strongNonDrawSingle) {
+        } else if (baseConfidence === "高" && strongNonDrawSingle) {
           decision = {
             type: "single",
             primaryKey: ranked[0].key,
             secondaryKey: null
           };
-        } else if (sideDrawDouble) {
-          decision = {
-            type: "double",
-            primaryKey: sideLeaderKey,
-            secondaryKey: "draw"
-          };
-        } else if (homeAwayDouble) {
+        } else if (baseConfidence === "高") {
+          if (sideDrawDouble) {
+            decision = {
+              type: "double",
+              primaryKey: sideLeaderKey,
+              secondaryKey: "draw"
+            };
+          } else if (homeAwayDouble) {
+            decision = {
+              type: "double",
+              primaryKey: "home",
+              secondaryKey: "away"
+            };
+          } else if (leaderKey === "draw" || finalProb.draw >= config.thresholds.drawMinimum) {
+            decision = {
+              type: "draw-single",
+              primaryKey: "draw",
+              secondaryKey: null
+            };
+          } else {
+            decision = {
+              type: "double",
+              primaryKey: leaderKey,
+              secondaryKey: secondKey === leaderKey ? ranked[2].key : secondKey
+            };
+          }
+        } else if (baseConfidence === "中") {
+          if (confidenceProfile.label === "中-偏平") {
+            const preferredSide =
+              leaderKey === "draw"
+                ? (finalProb.home >= finalProb.away ? "home" : "away")
+                : leaderKey;
+            decision = {
+              type: "double",
+              primaryKey: preferredSide,
+              secondaryKey: "draw"
+            };
+          } else if (confidenceProfile.label === "中-偏主") {
+            decision = {
+              type: "double",
+              primaryKey: "home",
+              secondaryKey: secondKey === "draw" || finalProb.draw >= 0.27 ? "draw" : "away"
+            };
+          } else {
+            decision = {
+              type: "double",
+              primaryKey: "away",
+              secondaryKey: secondKey === "draw" || finalProb.draw >= 0.27 ? "draw" : "home"
+            };
+          }
+        } else if (confidenceProfile.label === "谨慎-主客胶着" && topGap >= 0.04) {
           decision = {
             type: "double",
             primaryKey: "home",
             secondaryKey: "away"
           };
-        } else if (ranked[0].key === "draw" || finalProb.draw >= config.thresholds.drawMinimum) {
-          decision = {
-            type: "draw-single",
-            primaryKey: "draw",
-            secondaryKey: null
-          };
         } else {
           decision = {
-            type: "double",
-            primaryKey: ranked[0].key,
-            secondaryKey: ranked[1].key === ranked[0].key ? ranked[2].key : ranked[1].key
+            type: "abstain",
+            primaryKey: leaderKey,
+            secondaryKey: null
           };
         }
 
         const recommendation =
-          decision.type === "double"
+          decision.type === "abstain"
+            ? "不建议单押"
+            : decision.type === "double"
             ? `${outcomeLabels[decision.primaryKey]}/${outcomeLabels[decision.secondaryKey]}`
             : outcomeLabels[decision.primaryKey];
 
         return {
           recommendation,
           allowDouble: decision.type === "double",
+          abstained: decision.type === "abstain",
           drawSingle: decision.type === "draw-single",
           decision,
-          confidence: confidenceLabel(consensus, topGap),
-          confidenceProfile: buildRuleConfidenceProfile(
-            confidenceLabel(consensus, topGap),
-            ranked,
-            finalProb,
-            topGap
-          ),
+          confidence: baseConfidence,
+          confidenceProfile,
           finalProb,
           metrics: {
             consensus,
@@ -1750,7 +1799,7 @@
         } else {
           methodHtml = `平局单关门槛：平局概率至少 ${(config.thresholds.drawMinimum * 100).toFixed(1)}%，主客差不超过 ${(config.thresholds.drawHomeAwayGapMax * 100).toFixed(1)}%。
                主胜/客胜单关门槛：综合概率至少 ${(config.thresholds.strongSingleProbabilityMin * 100).toFixed(1)}%，前二差值至少 ${(config.thresholds.strongSingleGapMin * 100).toFixed(1)}%，且最低赔一致度不低于 ${(config.thresholds.strongSingleVoteShareMin * 100).toFixed(0)}%。
-               其余中间地带会优先收敛为 胜/平、平/负 或 胜/负，而不是直接追最低赔率一方。
+               当前规则已调整为：高档尽量保留单结果，中档优先收敛为双结果，谨慎档优先提示不建议单押，避免继续机械输出低质量单关。
                信心等级已按验证集重新校准：高档要求市场共识至少 79 分，且前二差值至少 17.5%；这样高档单结果准确率约 60.8%，但覆盖率会下降。
                当前参数版本：${config.calibration.version}，样本 ${config.calibration.sampleSize.total} 场，来源 ${config.calibration.sourceSummary}。
                验证集单结果准确率 ${(config.calibration.accuracySummary.singlePredictionAccuracy * 100).toFixed(1)}%，整体命中率 ${(config.calibration.accuracySummary.inclusiveHitRate * 100).toFixed(1)}%，双结果占比 ${(config.calibration.accuracySummary.doubleRate * 100).toFixed(1)}%。

@@ -106,7 +106,10 @@ def collect_rows() -> list[dict]:
 
 def render_result(result: dict, match_name: str) -> None:
     structure_label = result["confidenceProfile"]["label"]
-    st.success(f"推荐结果：{result['recommendation']}")
+    if result.get("abstained"):
+        st.warning(f"推荐结果：{result['recommendation']}")
+    else:
+        st.success(f"推荐结果：{result['recommendation']}")
     st.caption(
         f"{match_name + ' · ' if match_name else ''}"
         f"信心等级：{result['confidence']} · 结构标签：{structure_label}"

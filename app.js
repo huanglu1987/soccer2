@@ -157,6 +157,13 @@ function applyBulkPaste(rawText) {
 
 function renderResult(result, matchName = "") {
   const structureLabel = result.confidenceProfile?.label ?? result.confidence;
+  const modeLabel = result.abstained
+    ? "主动放弃"
+    : result.allowDouble
+      ? "双结果优先"
+      : result.drawSingle
+        ? "平局单关"
+        : "单结果";
   const bars = [
     ["home", result.finalProb.home],
     ["draw", result.finalProb.draw],
@@ -175,7 +182,7 @@ function renderResult(result, matchName = "") {
 
   resultRootEl.innerHTML = `
     <div class="result-hero">
-      <div class="result-kicker">默认规则模型</div>
+      <div class="result-kicker">默认规则模型 · ${modeLabel}</div>
       <div class="result-title">${result.recommendation}</div>
       <div class="result-meta">${matchName ? `${matchName} · ` : ""}结构标签：${structureLabel}</div>
     </div>
