@@ -201,10 +201,135 @@ def build_rule_confidence_profile(
     }
 
 
+def build_cold_upset_profile(
+    confidence_profile: dict[str, str],
+    leader_key: str,
+    second_key: str,
+    final_prob: dict[str, float],
+    metrics: dict[str, float],
+) -> dict[str, str | bool | None]:
+    top_gap = metrics["topGap"]
+    consensus = metrics["consensus"]
+    home_away_gap = metrics["homeAwayGap"]
+    favorite_vote_share = metrics["favoriteVoteShare"]
+    draw_prob = final_prob["draw"]
+    full_vote = favorite_vote_share >= 0.999
+    strong_but_not_full_vote = favorite_vote_share >= 0.83 and favorite_vote_share < 0.999
+    split_vote = favorite_vote_share < 0.67
+
+    draw_cold = (
+        confidence_profile["label"] == "中-偏平"
+        and second_key == "draw"
+        and draw_prob >= 0.30
+        and full_vote
+        and (
+            (
+                leader_key == "home"
+                and 0.10 <= top_gap <= 0.15
+                and 0.75 <= consensus < 0.85
+                and 0.10 <= home_away_gap <= 0.18
+            )
+            or (
+                leader_key == "away"
+                and 0.10 <= top_gap <= 0.15
+                and consensus >= 0.85
+                and 0.10 <= home_away_gap <= 0.18
+            )
+            or (
+                leader_key == "away"
+                and 0.05 <= top_gap < 0.10
+                and consensus >= 0.85
+                and 0.10 <= home_away_gap <= 0.18
+            )
+            or (
+                leader_key == "home"
+                and 0.05 <= top_gap < 0.10
+                and consensus >= 0.85
+                and 0.05 <= home_away_gap < 0.10
+            )
+        )
+    )
+    if draw_cold:
+        return {
+            "active": True,
+            "label": "冷门-平局",
+            "predictedKey": "draw",
+            "note": "热门方向虽然还在前面，但平局始终贴在第二位且结构足够紧，这类在历史样本里更容易直接打出平局冷门。",
+        }
+
+    side_cold = (
+        (
+            confidence_profile["label"] == "谨慎-主客胶着"
+            and leader_key == "away"
+            and second_key == "home"
+            and top_gap < 0.05
+            and 0.27 <= draw_prob < 0.30
+            and consensus >= 0.85
+            and home_away_gap < 0.05
+            and split_vote
+        )
+        or (
+            confidence_profile["label"] == "谨慎-主客胶着"
+            and leader_key == "home"
+            and second_key == "away"
+            and top_gap < 0.05
+            and draw_prob >= 0.30
+            and consensus >= 0.85
+            and home_away_gap < 0.05
+            and strong_but_not_full_vote
+        )
+        or (
+            confidence_profile["label"] == "谨慎-主客胶着"
+            and leader_key == "home"
+            and second_key == "away"
+            and top_gap < 0.05
+            and 0.27 <= draw_prob < 0.30
+            and consensus >= 0.85
+            and home_away_gap < 0.05
+            and strong_but_not_full_vote
+        )
+        or (
+            confidence_profile["label"] == "中-偏平"
+            and leader_key == "away"
+            and second_key == "home"
+            and 0.05 <= top_gap < 0.10
+            and draw_prob >= 0.30
+            and consensus >= 0.85
+            and 0.05 <= home_away_gap < 0.10
+            and full_vote
+        )
+        or (
+            confidence_profile["label"] == "中-偏主"
+            and leader_key == "home"
+            and second_key == "away"
+            and top_gap < 0.05
+            and 0.24 <= draw_prob < 0.27
+            and consensus >= 0.85
+            and home_away_gap < 0.05
+            and full_vote
+        )
+    )
+    if side_cold:
+        return {
+            "active": True,
+            "label": f"冷门-{OUTCOME_LABELS[second_key]}",
+            "predictedKey": second_key,
+            "note": "主客两端贴得过近，热门方向并没有看起来那么稳，这类在历史样本里更容易直接打出反向赛果冷门。",
+        }
+
+    return {
+        "active": False,
+        "label": "",
+        "predictedKey": None,
+        "note": "",
+    }
+
+
 def build_rule_explanation(
     final_prob: dict[str, float],
     metrics: dict[str, float],
     decision: dict[str, str | None],
+    cold_profile: dict[str, str | bool | None],
 ) -> str:
     parts: list[str] = []
     lead_outcome = OUTCOME_LABELS[decision["primaryKey"]]
@@ -230,6 +355,9 @@ def build_rule_explanation(
 
     if decision["type"] == "abstain":
         return f"{'，'.join(parts)}，当前更适合把这场视为低确定性场次，主动放弃单押。"
+
+    if decision["type"] == "cold-single" and cold_profile.get("active"):
+        return f"{'，'.join(parts)}，{cold_profile['note']}，因此触发保守冷门层，直接改判为{OUTCOME_LABELS[cold_profile['predictedKey']]}。"
 
     if decision["type"] == "draw-single":
         return f"{'，'.join(parts)}，同时主客两端接近，因此把平局提升为单结果。"
@@ -384,6 +512,18 @@ def compute_rule_prediction(rows: list[dict]) -> dict:
     confidence_profile = build_rule_confidence_profile(
         base_confidence, ranked, final_prob, top_gap
     )
+    cold_profile = build_cold_upset_profile(
+        confidence_profile,
+        leader_key,
+        second_key,
+        final_prob,
+        {
+            "topGap": top_gap,
+            "consensus": consensus,
+            "homeAwayGap": home_away_gap,
+            "favoriteVoteShare": favorite_vote_share,
+        },
+    )
 
     if draw_single:
         decision = {"type": "draw-single", "primaryKey": "draw", "secondaryKey": None}
@@ -422,6 +562,13 @@ def compute_rule_prediction(rows: list[dict]) -> dict:
     else:
         decision = {"type": "abstain", "primaryKey": leader_key, "secondaryKey": None}
 
+    if cold_profile["active"] and decision["type"] not in {"single", "draw-single"}:
+        decision = {
+            "type": "cold-single",
+            "primaryKey": cold_profile["predictedKey"],
+            "secondaryKey": None,
+        }
+
     recommendation = (
         "不建议单押"
         if decision["type"] == "abstain"
@@ -441,6 +588,7 @@ def compute_rule_prediction(rows: list[dict]) -> dict:
         "decision": decision,
         "confidence": base_confidence,
         "confidenceProfile": confidence_profile,
+        "coldProfile": cold_profile,
         "finalProb": final_prob,
         "metrics": {
             "consensus": consensus,
@@ -466,5 +614,6 @@ def compute_rule_prediction(rows: list[dict]) -> dict:
                 "favoriteVoteShare": favorite_vote_share,
             },
             decision,
+            cold_profile,
         ),
     }

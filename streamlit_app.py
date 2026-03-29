@@ -106,13 +106,15 @@ def collect_rows() -> list[dict]:
 
 def render_result(result: dict, match_name: str) -> None:
     structure_label = result["confidenceProfile"]["label"]
+    cold_profile = result.get("coldProfile") or {"active": False}
+    cold_suffix = f" · 冷门标签：{cold_profile['label']}" if cold_profile.get("active") else ""
     if result.get("abstained"):
         st.warning(f"推荐结果：{result['recommendation']}")
     else:
         st.success(f"推荐结果：{result['recommendation']}")
     st.caption(
         f"{match_name + ' · ' if match_name else ''}"
-        f"信心等级：{result['confidence']} · 结构标签：{structure_label}"
+        f"信心等级：{result['confidence']} · 结构标签：{structure_label}{cold_suffix}"
     )
 
     col1, col2, col3 = st.columns(3)
@@ -138,6 +140,8 @@ def render_result(result: dict, match_name: str) -> None:
     st.markdown("### 解释")
     st.write(result["explanation"])
     st.info(f"结构判读：{result['confidenceProfile']['note']}")
+    if cold_profile.get("active"):
+        st.warning(f"冷门判读：{cold_profile['note']}")
 
 
 ensure_state()

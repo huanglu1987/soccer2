@@ -159,11 +159,14 @@ function renderResult(result, matchName = "") {
   const structureLabel = result.confidenceProfile?.label ?? result.confidence;
   const modeLabel = result.abstained
     ? "主动放弃"
+    : result.coldProfile?.active
+      ? "冷门单关"
     : result.allowDouble
       ? "双结果优先"
       : result.drawSingle
         ? "平局单关"
         : "单结果";
+  const coldLabel = result.coldProfile?.active ? ` · 冷门标签：${result.coldProfile.label}` : "";
   const bars = [
     ["home", result.finalProb.home],
     ["draw", result.finalProb.draw],
@@ -184,7 +187,7 @@ function renderResult(result, matchName = "") {
     <div class="result-hero">
       <div class="result-kicker">默认规则模型 · ${modeLabel}</div>
       <div class="result-title">${result.recommendation}</div>
-      <div class="result-meta">${matchName ? `${matchName} · ` : ""}结构标签：${structureLabel}</div>
+      <div class="result-meta">${matchName ? `${matchName} · ` : ""}结构标签：${structureLabel}${coldLabel}</div>
     </div>
     <div class="summary-grid">
       <div class="summary-card">
@@ -205,8 +208,9 @@ function renderResult(result, matchName = "") {
       <span class="tag">推荐结果：${result.recommendation}</span>
       <span class="tag">信心等级：${result.confidence}</span>
       <span class="tag">结构标签：${structureLabel}</span>
+      ${result.coldProfile?.active ? `<span class="tag">${result.coldProfile.label}</span>` : ""}
     </div>
-    <div class="explanation">${result.explanation}${result.confidenceProfile?.note ? ` 结构判读：${result.confidenceProfile.note}` : ""}</div>
+    <div class="explanation">${result.explanation}${result.confidenceProfile?.note ? ` 结构判读：${result.confidenceProfile.note}` : ""}${result.coldProfile?.active ? ` 冷门判读：${result.coldProfile.note}` : ""}</div>
   `;
 }
 
