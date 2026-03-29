@@ -317,6 +317,34 @@ def build_cold_upset_profile(
             "note": "主客两端贴得过近，热门方向并没有看起来那么稳，这类在历史样本里更容易直接打出反向赛果冷门。",
         }
 
+    high_odds_draw_cold = (
+        (
+            confidence_profile["label"] == "中-偏客"
+            and leader_key == "away"
+            and favorite_vote_share >= 0.999
+            and consensus >= 0.85
+            and 0.24 <= draw_prob < 0.30
+            and top_gap < 0.10
+            and home_away_gap < 0.10
+        )
+        or (
+            confidence_profile["label"] == "高-分胜负"
+            and second_key == "draw"
+            and favorite_vote_share >= 0.999
+            and consensus >= 0.85
+            and 0.27 <= draw_prob < 0.30
+            and 0.15 <= top_gap < 0.20
+            and home_away_gap >= 0.18
+        )
+    )
+    if high_odds_draw_cold:
+        return {
+            "active": True,
+            "label": "高赔冷门-平局",
+            "predictedKey": "draw",
+            "note": "这类结构更偏向 3.20 以上的高赔率平局冷门，热门方向虽然还领先，但平局在历史样本里更容易以高回报方式打出。",
+        }
+
     return {
         "active": False,
         "label": "",

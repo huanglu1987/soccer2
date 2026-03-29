@@ -977,6 +977,38 @@
           };
         }
 
+        const highOddsDrawCold =
+          (
+            confidenceProfile.label === "中-偏客" &&
+            leaderKey === "away" &&
+            favoriteVoteShare >= 0.999 &&
+            consensus >= 0.85 &&
+            drawProb >= 0.24 &&
+            drawProb < 0.3 &&
+            topGap < 0.1 &&
+            homeAwayGap < 0.1
+          ) ||
+          (
+            confidenceProfile.label === "高-分胜负" &&
+            secondKey === "draw" &&
+            favoriteVoteShare >= 0.999 &&
+            consensus >= 0.85 &&
+            drawProb >= 0.27 &&
+            drawProb < 0.3 &&
+            topGap >= 0.15 &&
+            topGap < 0.2 &&
+            homeAwayGap >= 0.18
+          );
+
+        if (highOddsDrawCold) {
+          return {
+            active: true,
+            label: "高赔冷门-平局",
+            predictedKey: "draw",
+            note: "这类结构更偏向 3.20 以上的高赔率平局冷门，热门方向虽然还领先，但平局在历史样本里更容易以高回报方式打出。"
+          };
+        }
+
         return {
           active: false,
           label: "",
@@ -1960,7 +1992,7 @@
         } else {
           methodHtml = `平局单关门槛：平局概率至少 ${(config.thresholds.drawMinimum * 100).toFixed(1)}%，主客差不超过 ${(config.thresholds.drawHomeAwayGapMax * 100).toFixed(1)}%。
                主胜/客胜单关门槛：综合概率至少 ${(config.thresholds.strongSingleProbabilityMin * 100).toFixed(1)}%，前二差值至少 ${(config.thresholds.strongSingleGapMin * 100).toFixed(1)}%，且最低赔一致度不低于 ${(config.thresholds.strongSingleVoteShareMin * 100).toFixed(0)}%。
-               当前规则已调整为：高档尽量保留单结果，中档优先收敛为双结果，谨慎档优先提示不建议单押；另外新增一层保守冷门识别，只在少数强结构里直接改判为冷门单关。
+               当前规则已调整为：高档尽量保留单结果，中档优先收敛为双结果，谨慎档优先提示不建议单押；另外新增一层保守冷门识别，只在少数强结构里直接改判为冷门单关，并额外补了一层高赔率平局冷门识别。
                信心等级已按验证集重新校准：高档要求市场共识至少 79 分，且前二差值至少 17.5%；这样高档单结果准确率约 60.8%，但覆盖率会下降。
                当前参数版本：${config.calibration.version}，样本 ${config.calibration.sampleSize.total} 场，来源 ${config.calibration.sourceSummary}。
                验证集单结果准确率 ${(config.calibration.accuracySummary.singlePredictionAccuracy * 100).toFixed(1)}%，整体命中率 ${(config.calibration.accuracySummary.inclusiveHitRate * 100).toFixed(1)}%，双结果占比 ${(config.calibration.accuracySummary.doubleRate * 100).toFixed(1)}%。
